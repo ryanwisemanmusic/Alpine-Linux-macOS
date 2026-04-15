@@ -1,0 +1,54 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+maintainer="team/gnome <achill@achill.org>"
+pkgname=orca
+pkgver=50.0.9
+pkgrel=1
+pkgdesc="Orca is an extensible screen reader"
+url="https://orca.gnome.org"
+arch="noarch"
+license="LGPL-2.1-or-later"
+depends="
+	at-spi2-core
+	gst-plugins-good
+	gtk+3.0
+	libatk-1.0
+	py3-atspi
+	py3-dasbus
+	py3-gobject3
+	py3-xdg
+	python3
+	"
+makedepends="
+	at-spi2-core-dev
+	gstreamer-dev
+	gtk-update-icon-cache
+	intltool
+	itstool
+	meson
+	py3-gobject3-dev
+	"
+subpackages="
+	$pkgname-lang
+	$pkgname-doc
+	$pkgname-pyc
+	$pkgname-systemd
+	"
+source="https://download.gnome.org/sources/orca/${pkgver%%.*}/orca-$pkgver.tar.xz"
+
+build() {
+	abuild-meson \
+		output .
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+b49769a53cbbc8c36890370a75f8782b1f45a8ebf4fec690851798651b7bd825fdf1754e6613af77b4b2111e364bc732f1e85dd33a18ed4a6c5599729a347419  orca-50.0.9.tar.xz
+"

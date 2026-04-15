@@ -1,0 +1,45 @@
+maintainer="Michał Polański <michal@polanski.me>"
+pkgname=llhttp
+pkgver=9.3.1
+pkgrel=0
+pkgdesc="Port of http_parser to llparse"
+url="https://llhttp.org/"
+license="MIT"
+arch="all"
+makedepends="cmake clang samurai npm"
+subpackages="$pkgname-dev $pkgname-doc"
+source="https://github.com/nodejs/llhttp/archive/v$pkgver/llhttp-$pkgver.tar.gz"
+
+# secfixes:
+#   9.2.1-r0:
+#     - CVE-2024-27982
+
+prepare() {
+	default_prepare
+
+	npm ci
+}
+
+build() {
+	make release RELEASE="$pkgver"
+
+	cmake -S release -B releasebuild -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DLLHTTP_BUILD_SHARED_LIBS=ON
+	cmake --build releasebuild
+}
+
+check() {
+	npm test
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install releasebuild
+
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+f2c1c5b9601a1fe438225ffd050d778487dd6aabd0b56c9c86a4824d4ab322ab4320f77ca45faec162c05b730d8b507b804dffea7fb50c76fb28fbc42e262f6f  llhttp-9.3.1.tar.gz
+"

@@ -1,0 +1,52 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qtnetworkauth
+pkgver=6.11.0
+pkgrel=1
+pkgdesc="Network authentication module"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="
+	qt6-qtbase-dev
+	qt6-qtbase-private-dev
+	"
+makedepends="$depends_dev
+	cmake
+	perl
+	samurai
+	"
+subpackages="$pkgname-dev"
+options="!check" # No tests
+builddir="$srcdir/qtnetworkauth-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtnetworkauth-everywhere-src-${pkgver/_/-}.tar.xz"
+
+build() {
+	export CFLAGS="$CFLAGS -g1 -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -g1 -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+d285386d81bec778cdf917e5561f4de953b3d2d993d189f639822de3ecf752ce0a883b1ad8895b297b3516e3787de66e745f3afadf8dd920982446ae49e8e9f9  qtnetworkauth-everywhere-src-6.11.0.tar.xz
+"

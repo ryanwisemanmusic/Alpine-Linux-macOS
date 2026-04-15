@@ -1,0 +1,56 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=calendarsupport
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Library providing calendar support"
+# armhf blocked by qt6-qtdeclarative
+# x86, s390x and riscv64 blocked by qt6-qtwebengine -> akonadi
+arch="all !armhf !x86 !s390x !riscv64"
+url="https://kontact.kde.org"
+license="GPL-2.0-or-later AND Qt-GPL-exception-1.0 AND LGPL-2.0-or-later"
+depends_dev="
+	akonadi-calendar-dev
+	akonadi-dev
+	akonadi-mime-dev
+	kcalendarcore-dev
+	kcalutils-dev
+	kcodecs-dev
+	kguiaddons-dev
+	kholidays-dev
+	ki18n-dev
+	kidentitymanagement-dev
+	kio-dev
+	kmime-dev
+	pimcommon-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/pim/calendarsupport.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/calendarsupport-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	wlheadless-run -- ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+2e96c29d594f415ef2cc3bacaaa7ce25398a5a9f91e5261c0ae09535f85c99be9d13131d23fe248892e24d6e289d56b9e05c424f21ced57fff2ff5fefe50fc74  calendarsupport-25.12.3.tar.xz
+"

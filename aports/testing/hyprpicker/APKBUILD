@@ -1,0 +1,41 @@
+# Contributor: kkflt <lolbri34423@gmail.com>
+# Maintainer: kkflt <lolbri34423@gmail.com>
+pkgname=hyprpicker
+pkgver=0.4.6
+pkgrel=0
+pkgdesc="A wlroots-compatible Wayland color picker that does not suck"
+url="https://github.com/hyprwm/hyprpicker"
+arch="all"
+license="BSD-3-Clause"
+makedepends="
+	cmake
+	samurai
+	wayland-protocols
+	hyprwayland-scanner
+	hyprutils-dev
+	pango-dev
+	cairo-dev
+	libjpeg-turbo-dev
+	libxkbcommon-dev
+	wayland-dev
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/hyprwm/hyprpicker/archive/v$pkgver/hyprpicker-v$pkgver.tar.gz"
+options="!check"
+
+build() {
+	cmake -S . -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE:STRING=Release
+	cmake --build build --config Release --target hyprpicker
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+
+sha512sums="
+e671b05006ee4edece044b32eb2ea127271aa359184d189562d8829fee39aa6fa7ffb66216d1282ba72d0de85c7b3384cf0aa303dd3a8c8030f170a673d96cb2  hyprpicker-v0.4.6.tar.gz
+"

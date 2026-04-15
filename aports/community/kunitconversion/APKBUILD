@@ -1,0 +1,68 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kunitconversion
+pkgver=6.24.0
+pkgrel=0
+pkgdesc="Support for unit conversion"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="
+	ki18n-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	kde-qdoc-common
+	py3-build
+	py3-setuptools
+	py3-shiboken6
+	pyside6-dev
+	python3-dev
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	py3-$pkgname:_py3
+	"
+_repo_url="https://invent.kde.org/frameworks/kunitconversion.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kunitconversion-$pkgver.tar.xz"
+options="net" # net required for tests
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	ctest --test-dir build -j1
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+_py3() {
+	amove usr/lib/python*
+}
+
+sha512sums="
+6d0ecc3ab280ce7d5c8551ac72f35022e4435b0ced3bd4fe53f32c9432539dc547ea0694e2ea4fb86044b6adb5c0252e1e65f74c1ab74b24aa536475b7003a6d  kunitconversion-6.24.0.tar.xz
+"

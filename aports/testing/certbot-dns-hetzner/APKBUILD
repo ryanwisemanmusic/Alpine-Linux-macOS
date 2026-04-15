@@ -1,0 +1,45 @@
+# Contributor: Dylan Van Assche <dylan@postmarketos.org>
+# Maintainer: Dylan Van Assche <dylan@postmarketos.org>
+pkgname=certbot-dns-hetzner
+pkgver=3.0.0
+pkgrel=1
+pkgdesc="Certbot DNS Authenticator for Hetzner"
+url="https://github.com/ctrlaltcoop/certbot-dns-hetzner"
+arch="noarch"
+license="Apache-2.0"
+depends="
+	certbot
+	py3-tldextract
+	py3-dns-lexicon
+	"
+makedepends="
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	"
+checkdepends="
+	py3-pytest
+	"
+subpackages="$pkgname-pyc"
+source="https://github.com/ctrlaltcoop/certbot-dns-hetzner/archive/v$pkgver/certbot-dns-hetzner-$pkgver.tar.gz"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+f44e4ebcda66d20edae6c2096cfabba0f8980b522c9e4074f7c47cc6a7fff45d5081a13224432afc028fb4c3620df390d45775dfac0ebacb159ad1ae9ffb90f6  certbot-dns-hetzner-3.0.0.tar.gz
+"

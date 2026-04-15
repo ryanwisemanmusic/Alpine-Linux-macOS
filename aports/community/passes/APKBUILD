@@ -1,0 +1,39 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=passes
+pkgver=0.11
+pkgrel=0
+pkgdesc="Manage your digital passes"
+url="https://github.com/pablo-s/passes"
+arch="all"
+license="GPL-3.0-or-later"
+depends="
+	libadwaita
+	py3-gobject3
+	zint
+	"
+makedepends="
+	appstream-glib
+	blueprint-compiler
+	desktop-file-utils
+	meson
+	zint-dev
+	"
+subpackages="$pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/pablo-s/passes/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+check() {
+	meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+sha512sums="
+9129e5c0bb0d5e357aa53ccce5b5c1ab160a459cc847fc96dd7b5ef129fe000ed7ec72055deae4879dbfef65ae195db1afb4c26f8f7833c4680fcd1246d8c0bf  passes-0.11.tar.gz
+"

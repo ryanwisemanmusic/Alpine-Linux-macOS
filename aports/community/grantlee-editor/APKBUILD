@@ -1,0 +1,55 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=grantlee-editor
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Utilities and tools to manage themes in KDE PIM applications "
+# armhf blocked by extra-cmake-modules
+# x86, armv7, s390x and riscv64 blocked by qt6-qtwebengine
+arch="all !armhf !x86 !armv7 !s390x !riscv64"
+url="https://kontact.kde.org/"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="
+	akonadi-mime-dev
+	extra-cmake-modules
+	grantleetheme-dev
+	karchive-dev
+	kcrash-dev
+	kdbusaddons-dev
+	kdoctools-dev
+	kimap-dev
+	knewstuff-dev
+	kpimtextedit-dev
+	ktextaddons-dev
+	ktexteditor-dev
+	ktextwidgets-dev
+	kxmlgui-dev
+	libkleo-dev
+	messagelib-dev
+	pimcommon-dev
+	qt6-qtbase-dev
+	qt6-qtwebengine-dev
+	samurai
+	syntax-highlighting-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/pim/grantlee-editor.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/grantlee-editor-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+395f2ad72f9282c740a3d2ce61377dd63e0a30537f0c53f83f036b29d18529009d42c95b8a549c31c043fce44eb23a7c0e3753d46c2d89ab2464f074df392271  grantlee-editor-25.12.3.tar.xz
+"

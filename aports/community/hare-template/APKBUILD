@@ -1,0 +1,27 @@
+# Maintainer: Willow Barraco <contact@willowbarraco.fr>
+pkgname=hare-template
+pkgver=0.26.0.3
+pkgrel=0
+pkgdesc="Templating library for Hare"
+url="https://sr.ht/~stacyharper/hare-template"
+arch="all !armhf !ppc64le !s390x !armv7 !x86 !loongarch64" # hare
+license="MPL-2.0"
+depends="hare-lex hare-streams haredo"
+makedepends="hare"
+source="$pkgname-$pkgver.tar.gz::https://git.sr.ht/~stacyharper/hare-template/archive/$pkgver.tar.gz"
+
+build() {
+	haredo
+}
+
+check() {
+	haredo check
+}
+
+package() {
+	DESTDIR="$pkgdir" PREFIX=/usr haredo install
+}
+
+sha512sums="
+0aa6d8a35f3fa22ac3fe4a161d1eed0bd9b773149a08a7fa40a56a2186828c5dd288f38b68898b6e8f925d8bfee8cb4f510d5e06eccfe2ec3931ba4fcbe480b1  hare-template-0.26.0.3.tar.gz
+"

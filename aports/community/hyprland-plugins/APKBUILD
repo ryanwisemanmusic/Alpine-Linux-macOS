@@ -1,0 +1,80 @@
+# Contributor: Jean-Louis Fuchs <safe.pen2857@rhizoome.ch>
+# Maintainer: Jean-Louis Fuchs <safe.pen2857@rhizoome.ch>
+pkgname=hyprland-plugins
+pkgver=0.52.0
+pkgrel=1
+_pkgdesc="Official plugins for Hyprland"
+pkgdesc="$_pkgdesc (all plugins)"
+_hyprlandver="~0.52"
+url="https://github.com/hyprwm/hyprland-plugins"
+arch="all"
+license="BSD-3-Clause"
+makedepends="
+	aquamarine-dev
+	cmake
+	samurai
+	hyprgraphics-dev
+	hyprlang-dev
+	hyprland-dev
+	hyprutils-dev
+	libdrm-dev
+	libinput-dev
+	libxkbcommon-dev
+	xcb-util-wm-dev
+	mesa-dev
+	pango-dev
+	pixman-dev
+	wayland-dev
+"
+subpackages="$pkgname-doc"
+options="!check" # currently there are no tests
+source="
+	https://github.com/hyprwm/hyprland-plugins/archive/v$pkgver/hyprland-plugins-v$pkgver.tar.gz
+	"
+_plugins="
+	borders-plus-plus
+	csgo-vulkan-fix
+	hyprbars
+	hyprexpo
+	hyprfocus
+	hyprscrolling
+	hyprtrails
+	hyprwinwrap
+	xtra-dispatchers
+"
+depends="hyprland$_hyprlandver"
+
+for plugin in $_plugins; do
+	subpackages="$subpackages $pkgname-$plugin:_subpkg_func"
+	depends="$depends $pkgname-$plugin"
+done
+
+build() {
+	for plugin in $_plugins; do
+		cd "$builddir/$plugin"
+		cmake -B build -G Ninja \
+			-DCMAKE_INSTALL_PREFIX=/usr \
+			-DCMAKE_INSTALL_LIBDIR=lib \
+			-DCMAKE_BUILD_TYPE=None
+		cmake --build build
+	done
+}
+
+package() {
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" LICENSE
+}
+
+# Generic subpkg handler
+_subpkg_func() {
+	local plugin="${subpkgname#"$pkgname-"}"
+	pkgdesc="Official plugins for Hyprland ($plugin)"
+	depends="hyprland$_hyprlandver"
+
+	cd "$builddir/$plugin"
+	DESTDIR="$subpkgdir" cmake --install build
+	install -Dm0644 -t "$pkgdir-doc/usr/share/doc/$subpkgname/" README.md
+}
+
+sha512sums="
+2402a49335b906d6a9684f891f5b5495bd7dc0a665c126026281329597a62e96dd3c4a8d798f4dc46a89aecce4fadadc14de5115d3d141c2e40f1a6ed12ae015  hyprland-plugins-v0.52.0.tar.gz
+"

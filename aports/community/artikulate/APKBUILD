@@ -1,0 +1,52 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=artikulate
+pkgver=25.12.3
+pkgrel=0
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://edu.kde.org/artikulate"
+pkgdesc="Improve your pronunciation by listening to native speakers"
+license="(GPL-2.0-only OR GPL-3.0-only) AND GFDL-1.2-only"
+depends="kirigami"
+makedepends="
+	extra-cmake-modules
+	karchive-dev
+	kconfig-dev
+	kcrash-dev
+	kdoctools-dev
+	ki18n-dev
+	kirigami-dev
+	kitemmodels-dev
+	knewstuff-dev
+	kxmlgui-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtmultimedia-dev
+	samurai
+	"
+subpackages="$pkgname-doc $pkgname-lang"
+_repo_url="https://invent.kde.org/education/artikulate.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/artikulate-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build -E "test_editorsession"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+d62a25287fb8d4c13f37fc3952c396b82cbf9615fdb84740183ada06f59fb10c62c3f7379666624fd92e1c98657ed90806042980b58ef3c8d935952cfd44a734  artikulate-25.12.3.tar.xz
+"

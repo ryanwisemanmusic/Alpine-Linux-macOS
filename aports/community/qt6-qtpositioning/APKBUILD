@@ -1,0 +1,70 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qtpositioning
+pkgver=6.11.0
+pkgrel=1
+pkgdesc="Provides access to position, satellite and area monitoring classes"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends="xdg-utils"
+depends_dev="qt6-qtbase-dev"
+makedepends="$depends_dev
+	cmake
+	perl
+	qt6-qtbase-private-dev
+	samurai
+	"
+case "$CARCH" in
+	armhf) ;;
+	*)
+		depends_dev="$depends_dev qt6-qtdeclarative-dev"
+		makedepends="$makedepends
+			qt6-qtdeclarative-dev
+			qt6-qtdeclarative-private-dev
+			"
+		;;
+esac
+
+subpackages="$pkgname-dev"
+builddir="$srcdir/qtpositioning-everywhere-src-${pkgver/_/-}"
+options="!check" # no tests were found
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtpositioning-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No usable tests
+
+build() {
+	export CFLAGS="$CFLAGS -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DINSTALL_BINDIR=lib/qt6/bin \
+		-DINSTALL_DOCDIR=share/doc/qt6 \
+		-DINSTALL_ARCHDATADIR=lib/qt6 \
+		-DINSTALL_DATADIR=share/qt6 \
+		-DINSTALL_INCLUDEDIR=include/qt6 \
+		-DINSTALL_MKSPECSDIR=lib/qt6/mkspecs \
+		-DINSTALL_EXAMPLESDIR=share/doc/qt6/examples
+	cmake --build build --parallel
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+de31a3c09f0db36ba643a102bffcd197e14c1c872a8caef66f7650dd98d7eab8ace142dc3801f870e8b7454ea95639f96b692cb763e2eff2ff27691bd52c7948  qtpositioning-everywhere-src-6.11.0.tar.xz
+"

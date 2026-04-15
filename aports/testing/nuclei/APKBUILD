@@ -1,0 +1,37 @@
+# Contributor: Jonas <3426-spameier@users.gitlab.alpinelinux.org>
+# Maintainer: Jonas <3426-spameier@users.gitlab.alpinelinux.org>
+pkgname=nuclei
+pkgver=3.7.1
+pkgrel=1
+pkgdesc="Vulnerability scanner built on a simple YAML-based DSL"
+url="https://docs.projectdiscovery.io/tools/nuclei"
+# go test -race is not supported on armv7
+# the others do not provide chromium, which is required for tests
+arch="aarch64 x86_64"
+license="MIT"
+makedepends="go"
+checkdepends="chromium"
+subpackages="$pkgname-doc"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/projectdiscovery/nuclei/archive/refs/tags/v$pkgver.tar.gz
+	10-set-GOFLAGS.patch
+	"
+options="net"
+
+build() {
+	make GOFLAGS="$GOFLAGS" build
+}
+
+check() {
+	make GOFLAGS="$GOFLAGS" test
+}
+
+package() {
+	install -Dm755 "$builddir/bin/nuclei" -t "$pkgdir/usr/bin/"
+	install -Dm644 LICENSE.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="
+df387af295ec46d0a5f0283f7182ceae369c1df63f2c9d65154d4f6cf683397836410260f749f466bf73976c3580b11c2d46509dcec7ccd6c8e368e50a66be62  nuclei-3.7.1.tar.gz
+745ebfd4e1dbca4a8e9604c41dea6638db647272d8447b6a7db9fa9b5a2c2356668eb28be0d955a858a01cc1db6aa1d659cd865d7b4594ed37864889fa4f4dc5  10-set-GOFLAGS.patch
+"

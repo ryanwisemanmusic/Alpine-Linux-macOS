@@ -1,0 +1,36 @@
+# Contributor: Antoine Martin (ayakael) <dev@ayakael.net>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=py3-coverage
+pkgver=7.13.5
+pkgrel=1
+pkgdesc="Code coverage measurement for Python"
+options="!check" # Requires 'xdist'
+url="https://pypi.org/project/coverage"
+arch="all"
+license="Apache-2.0"
+makedepends="python3-dev py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/c/coverage/coverage-$pkgver.tar.gz"
+builddir="$srcdir/coverage-$pkgver"
+
+replaces="py-coverage" # Backwards compatibility
+provides="py-coverage=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel --wheel-dir .dist --output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+6210bbd9ed0c044d07630f4303ae97e3c9f84e3bb288d748e7c7598da2206303454fa1827116defc60b557b8dd6c2aca887003634008fc425e45ba4e0cba0097  coverage-7.13.5.tar.gz
+"

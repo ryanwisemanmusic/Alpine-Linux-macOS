@@ -1,0 +1,44 @@
+# Contributor: Bjoern Schilberg <bjoern@intevation.de>
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+maintainer="Holger Jaekel <holger.jaekel@gmx.de>"
+pkgname=postgis
+pkgver=3.6.2
+pkgrel=0
+pkgdesc="spatial database extender for PostgreSQL object-relational database"
+url="https://postgis.net/"
+arch="all"
+license="GPL-2.0-or-later"
+depends="perl"
+makedepends="
+	gdal-dev
+	geos-dev
+	json-c-dev
+	libxml2-dev
+	pcre2-dev
+	perl-dev
+	postgresql-dev
+	proj-dev
+	protobuf-c-dev
+	sfcgal-dev
+	"
+subpackages="$pkgname-doc"
+source="https://download.osgeo.org/postgis/source/postgis-$pkgver.tar.gz"
+options="!check" # tests depends on a running PostgreSQL server
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+package() {
+	depends="$depends postgresql$(pg_config --major-version)"
+
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="
+8c7fed9be698fea4cf90fba996e89ae3ce7fe9807c68e194f9fdfe84a0f9fdc423a44db359c157fe8f8077ebe971a356de052cac85b4d2987e453054d6b6ad66  postgis-3.6.2.tar.gz
+"

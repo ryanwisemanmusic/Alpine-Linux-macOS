@@ -1,0 +1,55 @@
+# Contributor: Sean McAvoy <seanmcavoy@gmail.com>
+# Contributor: crapStone <crapstone01@gmail.com>
+# Maintainer: Sean McAvoy <seanmcavoy@gmail.com>
+pkgname=topgrade
+pkgver=17.2.1
+pkgrel=0
+pkgdesc="run upgrades of packages in OS and other package managers"
+url="https://github.com/topgrade-rs/topgrade"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="cargo cargo-auditable"
+subpackages="
+	$pkgname-bash-completion
+	$pkgname-fish-completion
+	$pkgname-zsh-completion
+	$pkgname-doc
+	"
+options="net" # cargo
+source="topgrade-$pkgver.tar.gz::https://github.com/topgrade-rs/topgrade/archive/refs/tags/v$pkgver.tar.gz"
+
+
+prepare() {
+	default_prepare
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --release --frozen
+
+	target/release/topgrade --gen-completion bash > topgrade.bash
+	target/release/topgrade --gen-completion fish > topgrade.fish
+	target/release/topgrade --gen-completion zsh > _topgrade
+
+	target/release/topgrade --gen-manpage > topgrade.8
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/topgrade "$pkgdir"/usr/bin/topgrade
+	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/topgrade/LICENSE
+
+	install -Dm644 topgrade.bash "$pkgdir"/usr/share/bash-completion/completions/topgrade
+	install -Dm644 topgrade.fish "$pkgdir"/usr/share/fish/vendor_completions.d/topgrade.fish
+	install -Dm644 _topgrade "$pkgdir"/usr/share/zsh/site-functions/_topgrade
+
+	install -Dm644 config.example.toml "$pkgdir"/usr/share/doc/topgrade/config.example.toml
+	install -Dm644 topgrade.8 "$pkgdir"/usr/share/man/man8/topgrade.8
+}
+
+sha512sums="
+644479fcc26b65708b519306ef07a2cd9aa38ea268e774f04d017a1d7fb2b9180c0c2ec0db2bd8470d0a2180cce553c9b61ec026461aa7c11b7cb6a6d8c7a445  topgrade-17.2.1.tar.gz
+"

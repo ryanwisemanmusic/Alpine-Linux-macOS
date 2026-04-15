@@ -1,0 +1,67 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qtspeech
+pkgver=6.11.0
+pkgrel=1
+pkgdesc="Qt6 module to make text to speech and speech recognition easy"
+url="https://qt.io/"
+# armhf blocked by qt6-qtmultimedia
+arch="all !armhf"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="
+	alsa-lib-dev
+	flite-dev
+	qt6-qtmultimedia-dev
+	"
+makedepends="$depends_dev
+	cmake
+	perl
+	qt6-qtbase-private-dev
+	samurai
+	"
+case "$CARCH" in
+	armhf) ;;
+	*)
+		depends_dev="$depends_dev
+			qt6-qtdeclarative-dev
+			"
+		makedepends="$makedepends
+			qt6-qtdeclarative-dev
+			qt6-qtdeclarative-private-dev
+			"
+		;;
+esac
+subpackages="$pkgname-dev"
+builddir="$srcdir/qtspeech-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtspeech-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No tests
+
+build() {
+	export CFLAGS="$CFLAGS -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+05072484ab1c28e1d3ec6861da3917485314e0ba4cf0cdeab900673881ed3645d531d6d3b91333fd3e69be2158d66a67394b6ec97a71150d18db6ac33379034e  qtspeech-everywhere-src-6.11.0.tar.xz
+"

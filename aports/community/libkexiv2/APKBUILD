@@ -1,0 +1,44 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=libkexiv2
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Library to manipulate picture metadata"
+url="https://www.kde.org/applications/graphics"
+arch="all"
+license="GPL-2.0-or-later"
+depends_dev="
+	exiv2-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	qt6-qt5compat-dev
+	samurai
+	"
+subpackages="$pkgname-dev"
+_repo_url="https://invent.kde.org/graphics/libkexiv2.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libkexiv2-$pkgver.tar.xz"
+options="!check" # No usable tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DBUILD_WITH_QT6=ON \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+433bd2131fa9b474b5b8afb3d636701140556da17e81af5242e2d7f83e0e37de9f5f802aa2cb0c0c143d595730965438340a8341b3c35e2c7eb8f0f6d74563ca  libkexiv2-25.12.3.tar.xz
+"

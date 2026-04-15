@@ -1,0 +1,46 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=telly-skout
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Convergent TV guide based on Kirigami"
+url="https://invent.kde.org/plasma-mobile/telly-skout"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+license="GPL-2.0-or-later AND LicenseRef-KDE-Accepted-GPL"
+depends="kirigami"
+makedepends="
+	extra-cmake-modules
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	ki18n-dev
+	kirigami-addons-dev
+	qqc2-desktop-style-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+_repo_url="https://invent.kde.org/utilities/telly-skout.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/telly-skout-$pkgver.tar.xz"
+# No tests
+options="!check"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+67977984f7440c464a16ac3f2f10fe96be64d912bc861a19222ab9b790aecf8858aa11046da480a2e9cf60b49a477f6d110d6beb73942fa469f0160da1e8190a  telly-skout-25.12.3.tar.xz
+"

@@ -1,0 +1,83 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Contributor: Krassy Boykinov <kboykinov@teamcentrixx.com>
+maintainer="team/gnome <achill@achill.org>"
+pkgname=evolution-data-server
+pkgver=3.60.1
+pkgrel=1
+# NOTE: Upgrade only to even-numbered versions (e.g. 1.18.x, 1.20.x)!
+pkgdesc="data server for evolution"
+options="!check" # Tests fail on the builders, passes CI
+url="https://projects.gnome.org/evolution"
+arch="all"
+license="GPL-2.0-or-later"
+depends_dev="
+	gcr-dev
+	icu-dev
+	"
+makedepends="$depends_dev
+	bison
+	boost-dev
+	cmake
+	flex
+	glib-dev
+	gnome-online-accounts-dev
+	gnu-libiconv-dev
+	gobject-introspection-dev
+	gperf
+	gtk+3.0-dev
+	gtk4.0-dev
+	intltool
+	json-glib-dev
+	krb5-dev
+	libcanberra-dev
+	libgweather4-dev
+	libical-dev
+	libphonenumber-dev
+	libsecret-dev
+	libsoup3-dev
+	libxml2-dev
+	nss-dev
+	openldap-dev
+	samurai
+	sqlite-dev
+	vala
+	webkit2gtk-6.0-dev
+	"
+
+checkdepends="db-utils"
+subpackages="$pkgname-dev $pkgname-lang $pkgname-systemd"
+source="https://download.gnome.org/sources/evolution-data-server/${pkgver%.*}/evolution-data-server-$pkgver.tar.xz"
+
+build() {
+	CFLAGS="$CFLAGS -I/usr/include/gnu-libiconv" \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DSYSCONF_INSTALL_DIR=/etc \
+		-DCMAKE_BUILD_TYPE=None \
+		-DENABLE_GOA=ON \
+		-DENABLE_INTROSPECTION=ON \
+		-DENABLE_VALA_BINDINGS=ON \
+		-DWITH_PHONENUMBER=ON \
+		-DWITH_LIBDB=OFF \
+		-DENABLE_SCHEMAS_COMPILE:BOOL=OFF \
+		-DENABLE_OAUTH2_WEBKITGTK=OFF
+	cmake --build build
+}
+
+check() {
+	cd build
+	# failing tests on s390x. -locale tests fail due to musl not supporting LC_ADDRESS.
+	case "$CARCH" in
+		s390x) ;;
+		*) ctest -E "(test-book-cache-cursor-change-locale|test-sqlite-cursor-change-locale)"
+	esac
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+e9b4775ca271102f46b194b410fbc83a4df730ef0f24eca4629e9bc6930682333924d46ab32d560735d325aba0941a6c45111744211e4c7f591e79a87fb13478  evolution-data-server-3.60.1.tar.xz
+"

@@ -1,0 +1,57 @@
+# Contributor: Stuart Cardall <developer@it-offshore.co.uk>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=libqmi
+pkgver=1.38.0
+pkgrel=0
+pkgdesc="QMI modem protocol helper library"
+url="https://www.freedesktop.org/wiki/Software/libqmi"
+arch="all"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="
+	bash-completion-dev
+	glib-dev
+	gobject-introspection-dev
+	help2man
+	libgudev-dev
+	libmbim-dev
+	libqrtr-glib-dev
+	linux-headers
+	meson
+	python3
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-bash-completion
+	qmi-utils
+	"
+source="https://gitlab.freedesktop.org/mobile-broadband/libqmi/-/archive/$pkgver/libqmi-$pkgver.tar.gz"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		. output
+	meson compile -C output
+}
+
+check() {
+	local tests=$(meson test --list -C output)
+	case "$CARCH" in
+		s390x) tests=${tests//test-message} ;;
+	esac
+	meson test --print-errorlogs -C output $tests
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+utils() {
+	pkgdesc="$pkgdesc (CLI utilities)"
+
+	amove usr/bin
+}
+
+sha512sums="
+499f466004820899178da8c1c071dc92dabf3e7505cb935a2e407c8675ab434b411f645dccea82d0ee643c31dfaca3516f755006cd00703691b3fc9dd73ee794  libqmi-1.38.0.tar.gz
+"

@@ -1,0 +1,43 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Contributor: Celeste <cielesti@protonmail.com>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=catch2-3
+pkgver=3.14.0
+pkgrel=0
+pkgdesc="Modern, C++-native, header-only, test framework for unit-tests (v3)"
+url="https://github.com/catchorg/Catch2"
+arch="all"
+license="BSL-1.0"
+makedepends="
+	cmake
+	python3
+	samurai
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/catchorg/Catch2/archive/v$pkgver/catch2-$pkgver.tar.gz"
+builddir="$srcdir/Catch2-$pkgver"
+
+build() {
+	# Set -DCATCH_DEVELOPMENT_BUILD to enable tests
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCATCH_DEVELOPMENT_BUILD="$(want_check && echo ON || echo OFF)" \
+		-DCATCH_BUILD_EXTRA_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DCATCH_ENABLE_WERROR=OFF
+	cmake --build build
+}
+
+check() {
+	# ApprovalTests is broken https://github.com/catchorg/Catch2/issues/1780
+	ctest --test-dir build -E "ApprovalTests"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+6eeeedc4e38b79a0a7253edfce3e29862a8761b6556f77aa3f77debd4e6631e0b57cdce7657eba2df01c4e2fd494c5b3f4bbf0dbdff32763387cf6c75d6e0c50  catch2-3.14.0.tar.gz
+"

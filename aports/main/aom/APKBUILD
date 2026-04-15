@@ -1,0 +1,78 @@
+# Contributor: Oleg Titov <oleg.titov@gmail.com>
+# Maintainer: Oleg Titov <oleg.titov@gmail.com>
+pkgname=aom
+pkgver=3.13.3
+pkgrel=0
+pkgdesc="Alliance for Open Media (AOM) AV1 codec SDK"
+url="https://aomedia.org/"
+arch="all"
+license="BSD-2-Clause AND custom"
+options="!check" # tests run for 5+ hours
+# AOMConfig.cmake requires aom tools to be installed.
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+makedepends="
+	cmake
+	linux-headers
+	nasm
+	perl
+	python3
+	samurai
+	"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs"
+source="https://storage.googleapis.com/aom-releases/libaom-$pkgver.tar.gz
+	posix-implicit.patch
+	split-static.patch
+	"
+builddir="$srcdir/libaom-$pkgver"
+
+# secfixes:
+#   3.9.1-r0:
+#     - CVE-2024-5171
+#   3.1.1-r0:
+#     - CVE-2021-30473
+#     - CVE-2021-30474
+#     - CVE-2021-30475
+
+build() {
+	local _neon_opt=
+	case "$CARCH" in
+		armhf) _neon_opt="-DENABLE_NEON=OFF" ;;
+		armv7) _neon_opt="-DAOM_NEON_INTRIN_FLAG=-mfpu=neon" ;;
+	esac
+
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DENABLE_TESTS="$(want_check && echo ON || echo OFF)" \
+		$_neon_opt
+	cmake --build build
+}
+
+check() {
+	local _testdata="$builddir"/test_data
+	mkdir -p $_testdata
+	export LIBAOM_TEST_DATA_PATH=$_testdata
+	ninja -C build testdata
+	ninja -C build runtests
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	install -Dm 644 -t "$pkgdir"/usr/share/doc/"$pkgname"/ \
+		README.md LICENSE PATENTS
+}
+
+static() {
+	default_static
+
+	amove usr/lib/cmake/AOM/AOMStaticTargets.cmake
+}
+
+sha512sums="
+400bfb048a810d00f16df2c4bb7bd3bfc23265aeba1de48cc691986bf185965989f8d362ccb599f559c00ed6289073568b6738a16283073e225b621156c93c18  libaom-3.13.3.tar.gz
+14e241f4bf8f181c323cc7db16ea791e3a5ccf6f7f82b854b468f167e7f7210ab66cfacd85806693ba604c58e91ff6a45a5c49dc17a200d5fd65eb3788d397b5  posix-implicit.patch
+87f08fc3aa2e342219ed04ffd86943b6a5f7304d08e3a27b568ca21a9e5107d39bb0726b55b255660cf612c811983f37272884b4b75bd5f1dcd8b3a1b21d56ef  split-static.patch
+"

@@ -1,0 +1,31 @@
+maintainer="Hugo Osvaldo Barrera <hugo@whynothugo.nl>"
+pkgname=tofu-ls
+pkgver=0.4.0
+pkgrel=1
+pkgdesc="OpenTofu language server"
+url="https://github.com/opentofu/tofu-ls/"
+# upstream doesn't support the others
+arch="all !loongarch64 !ppc64le !riscv64 !s390x"
+license="MPL-2.0"
+makedepends="go git"
+subpackages="$pkgname-doc"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/opentofu/tofu-ls/archive/refs/tags/v$pkgver.tar.gz"
+
+build() {
+	go build -v
+}
+
+check() {
+	go test -cover -covermode=atomic -timeout=5m ./...
+}
+
+package() {
+	install -Dm755 tofu-ls -t "$pkgdir"/usr/bin/
+	install -Dm644 docs/*.md -t "$pkgdir"/usr/share/doc/$pkgname/
+	install -Dm644 LICENSE -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+816dc2571d2f46a44338aef8877a21d94b8451285068ce3170011d8b13069354109ec2ba801efcf68f8633eb5724b39c245481a91764e7493171ce1452bc96c2  tofu-ls-0.4.0.tar.gz
+"

@@ -1,0 +1,50 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer:
+pkgname=py3-pytools
+pkgver=2025.2.5
+pkgrel=0
+pkgdesc="Collection of tools for Python3"
+url="https://github.com/inducer/pytools"
+arch="noarch"
+license="MIT"
+depends="
+	py3-platformdirs
+	py3-typing-extensions
+	"
+makedepends="
+	py3-gpep517
+	py3-hatchling
+	"
+checkdepends="
+	py3-numpy
+	py3-pytest
+	"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/inducer/pytools/archive/v$pkgver.tar.gz"
+builddir="$srcdir/pytools-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# some tests depend on siphash24 which isn't packaged
+	# https://github.com/inducer/pytools/pull/251
+	.testenv/bin/python3 -m pytest --ignore pytools/test/test_persistent_dict.py \
+		--ignore pytools/test/test_py_codegen.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+	# Tests shouldn't be included
+	rm -r "$pkgdir"/usr/lib/python*/site-packages/pytools/test
+}
+
+sha512sums="
+8ce2bb9463fb98706b9b13e9a2cfde2b9c1401f9cdc0dbc7eb7fae9e0fd343456efa2ea2c1cb533be3e74286ae4ff91905186fd1d8d6686185873dbfed0fc77c  py3-pytools-2025.2.5.tar.gz
+"

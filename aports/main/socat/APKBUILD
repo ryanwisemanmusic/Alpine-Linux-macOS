@@ -1,0 +1,59 @@
+# Contributor: Sheila Aman <sheila@vulpine.house>
+# Maintainer: mio <miyopan@e.email>
+maintainer="mio <miyopan@e.email>"
+pkgname=socat
+pkgver=1.8.1.1
+pkgrel=0
+pkgdesc="Multipurpose relay for binary protocols"
+# 1.8.1.1: multiple tests fail in ci, some require /dev/vsock or pty
+# x86*: 12 tests, 495 496 498 499 500 501 502 506 508 516 602 606
+# *: 25-27 tests, 399 410 495 496 498 499 500 501 502 504 506 508 546 547 [...]
+options="!check"
+url="http://www.dest-unreach.org/socat/"
+arch="all"
+license="GPL-2.0-only WITH OpenSSL-Exception"
+makedepends="openssl-dev readline-dev linux-headers"
+checkdepends="bash"
+subpackages="$pkgname-doc $pkgname-scripts::noarch"
+source="http://www.dest-unreach.org/socat/download/socat-$pkgver.tar.gz
+	use-linux-headers.patch
+	"
+
+# secfixes:
+#   0:
+#     - CVE-2024-54661
+
+build() {
+	CFLAGS="$CFLAGS -Wno-int-conversion" \
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var
+	make
+}
+
+check() {
+	make test
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+
+	install -Dm644 EXAMPLES doc/*.html doc/*.css \
+		-t "$pkgdir"/usr/share/doc/$pkgname/
+}
+
+scripts() {
+	pkgdesc="$pkgdesc (helper scripts)"
+	depends="$pkgname=$pkgver-r$pkgrel bash"
+
+	amove usr/bin/socat-*.sh
+}
+
+sha512sums="
+6235c03187724d57bd98b572780ba8c8648fd2530abc206964666191d48683c7a796499620f7499c688cd11010cdc6f5c7706ac6487ef3ecaba75ca16300cbb7  socat-1.8.1.1.tar.gz
+582a48d64f7925a11b4e38b94e5c4ec11a0dea9ae0780d0e6d09ca1239c95fced787350d04ba2613bf058f9b8b6de04ed10f20880b644e58de1faaa6c1824f54  use-linux-headers.patch
+"

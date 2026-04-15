@@ -1,0 +1,47 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=zlib-ng
+pkgver=2.3.2
+pkgrel=0
+pkgdesc="zlib replacement with optimizations for next generation systems"
+url="https://github.com/zlib-ng/zlib-ng"
+arch="all"
+license="Zlib"
+makedepends="cmake samurai"
+checkdepends="gzip zlib-dev"
+subpackages="$pkgname-dev"
+source="https://github.com/zlib-ng/zlib-ng/archive/$pkgver/zlib-ng-$pkgver.tar.gz"
+
+# secfixes:
+#   2.0.6-r0:
+#     - CVE-2022-37434
+
+build() {
+	local crossopts=
+	if [ "$CBUILD" != "$CHOST" ]; then
+		crossopts="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_VERBOSE_MAKEFILE=ON \
+		-DWITH_DFLTCC_DEFLATE=ON \
+		-DWITH_DFLTCC_INFLATE=ON \
+		-DZLIB_ENABLE_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DZLIBNG_ENABLE_TESTS="$(want_check && echo ON || echo OFF)" \
+		-DWITH_GTEST=OFF \
+		$crossopts
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+8781ee4bfda7cb8c8c5150c2e6a067d699580616b61af2ea4cf03cbe14c6715b31a29a20b7c3dd97254a9e487c72c5228c9cfa817ff71aa765fe7043ab136f04  zlib-ng-2.3.2.tar.gz
+"

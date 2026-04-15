@@ -1,0 +1,42 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Contributor: Celeste <cielesti@protonmail.com>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=py3-click
+pkgver=8.3.2
+pkgrel=0
+pkgdesc="Simple wrapper around optparse for powerful command line utilities"
+url="https://click.palletsprojects.com"
+arch="noarch"
+license="BSD-3-Clause"
+makedepends="
+	py3-flit-core
+	py3-gpep517
+	"
+checkdepends="py3-pytest"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/c/click/click-$pkgver.tar.gz"
+builddir="$srcdir/click-$pkgver"
+
+replaces="py-click" # Backwards compatibility
+provides="py-click=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+909c9421ef05dfabc6b685b290fbc7cc673bba5ebcf57e082dc75fe6a2d3843ae54de14aa886574c5371b80f51c0e2edafc0f0416a267b1bc6965dbe4e22be1f  click-8.3.2.tar.gz
+"

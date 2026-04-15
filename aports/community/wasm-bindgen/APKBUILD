@@ -1,0 +1,55 @@
+# Maintainer: kpcyrd <git@rxv.cc>
+pkgname=wasm-bindgen
+pkgver=0.2.114
+pkgrel=0
+pkgdesc="Interoperating JS and Rust code"
+url="https://github.com/rustwasm/wasm-bindgen"
+arch="all"
+license="Apache-2.0"
+depends="cargo nodejs rust-wasm"
+makedepends="
+	cargo-auditable
+	"
+source="https://github.com/rustwasm/wasm-bindgen/archive/refs/tags/$pkgver/wasm-bindgen-$pkgver.tar.gz
+	Cargo.lock
+	tests.patch
+	"
+options="net"
+
+case "$CARCH" in
+# FIXME most tests fail
+x86|s390x|arm*) options="$options !check" ;;
+esac
+
+prepare() {
+	# https://github.com/rustwasm/wasm-bindgen/issues/1819
+	cp "$srcdir/Cargo.lock" .
+
+	default_prepare
+
+	cargo fetch --target="$CHOST" --locked
+}
+
+build() {
+	cd crates/cli
+	cargo auditable build --release --frozen
+}
+
+check() {
+	cd crates/cli
+	RUSTFLAGS= \
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 -t "$pkgdir"/usr/bin \
+		target/release/wasm-bindgen \
+		target/release/wasm-bindgen-test-runner \
+		target/release/wasm2es6js
+}
+
+sha512sums="
+72b20ccda772a707f038d1d9b316cc2a9179a7c1d072b97f0e532fb41bfe055f73148544b18a2fd0118df2ffa320a3b86fa6515efeffa6042f07dbbd881c5a3b  wasm-bindgen-0.2.114.tar.gz
+0475e4ca6707ed59a784d557f85c44a1979d282e36bbbca8e1be44feda1f7e02ed4b1734c7d08d7ea7527230c0b35141a6002a60ab419d2a56677e11897d2f2c  Cargo.lock
+a1b872bca381766704e773ece632926bddee6094799881776482bab6c60edad3358bdfe6ee3605562de84b49cd43fba2f15992f4da20749cbf277ba0d72ad1c4  tests.patch
+"

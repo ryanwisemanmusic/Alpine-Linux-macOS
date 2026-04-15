@@ -1,0 +1,85 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+maintainer="team/gnome <achill@achill.org>"
+pkgname=tinysparql
+pkgver=3.11.0
+pkgrel=0
+pkgdesc="Personal search tool and storage system"
+url="https://tracker.gnome.org/"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	asciidoc
+	bash
+	bash-completion-dev
+	dbus-dev
+	docbook-xsl-nons
+	glib-dev
+	gobject-introspection-dev
+	icu-dev
+	json-glib-dev
+	libsoup3-dev
+	libstemmer-dev
+	libxml2-dev
+	meson
+	py3-gobject3
+	py3-setuptools
+	sqlite-dev
+	networkmanager-dev
+	vala
+	gi-docgen
+	graphviz
+	"
+checkdepends="
+	dbus
+	mandoc
+	"
+subpackages="
+	$pkgname-dbg
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	lib$pkgname:libs
+	$pkgname-bash-completion
+	$pkgname-systemd
+	"
+source="https://download.gnome.org/sources/tinysparql/${pkgver%.*}/tinysparql-$pkgver.tar.xz"
+
+[ "$CARCH" = "riscv64" ] && options="$options !check" # fails on builder because of SIGTRAP, but not on CI
+
+# for backwards compatibility
+replaces="tracker"
+provides="tracker=$pkgver-r$pkgrel"
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Ddocs=true \
+		-Dman=true \
+		-Dsystemd_user_services_dir=/usr/lib/systemd/user \
+		-Dintrospection=enabled \
+		-Dtests="$(want_check && echo true || echo false)" \
+		. output
+	meson compile -C output
+}
+
+check() {
+	XDG_RUNTIME_DIR="$(mktemp -p "$builddir" -d)" \
+	MANPATH="$builddir"/output/docs \
+	dbus-run-session -- \
+	meson test -t 10 --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+libs() {
+	default_libs
+	replaces="libtracker"
+	provides="libtracker=$pkgver-r$pkgrel"
+	amove usr/lib/girepository-1.0
+}
+
+sha512sums="
+03e145c29a2580876dd9338b90993cfe8dcdf96889089cf0d9fe0aff918edcc9ca5f44fcd116b24804a2d2622d0ad84ddc6619299b1592fe8e0d2f596f405a84  tinysparql-3.11.0.tar.xz
+"

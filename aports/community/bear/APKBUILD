@@ -1,0 +1,48 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer:
+pkgname=bear
+pkgver=4.0.4
+pkgrel=1
+pkgdesc="Tool that generates a compilation database for clang tooling"
+url="https://github.com/rizsotto/Bear"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	cargo
+	cargo-auditable
+	lld
+	"
+subpackages="$pkgname-doc"
+source="https://github.com/rizsotto/Bear/archive/$pkgver/bear-$pkgver.tar.gz
+	set-preload-path.patch
+	"
+builddir="$srcdir/Bear-$pkgver"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CHOST" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 target/release/bear -t "$pkgdir"/usr/bin/
+	install -Dm755 target/release/wrapper -t "$pkgdir"/usr/lib/bear/
+	install -Dm755 target/release/libexec.so -t "$pkgdir"/usr/lib/bear/
+
+	install -Dm644 man/bear.1 -t "$pkgdir"/usr/share/man/man1/
+	install -Dm644 README.md -t "$pkgdir"/usr/share/doc/bear/
+	install -Dm644 COPYING -t "$pkgdir"/usr/share/licenses/bear/
+}
+
+sha512sums="
+67885fe178849c008d696ff7844a5aca248d96dce5b2856d5f9e413ae6900ed81649a8bcf823d85fe25c555d57eb229a26115afed0de83173019a4d1bc7854bf  bear-4.0.4.tar.gz
+c56d227d551a02a11dc17932b25e35305ce5a433f331f3bb2a6cdfa8a5c7de4bb211305a8e4f4656abac915e8703ee480953fdbe8603ec03534cac9ad1d5a961  set-preload-path.patch
+"

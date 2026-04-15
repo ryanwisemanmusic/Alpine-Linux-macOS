@@ -1,0 +1,34 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=doxygen
+pkgver=1.16.1
+pkgrel=0
+pkgdesc="Documentation system for C++, C, Java, IDL and PHP"
+url="https://www.doxygen.nl/"
+arch="all"
+license="GPL-2.0-or-later"
+checkdepends="libxml2-utils"
+makedepends="flex bison coreutils perl python3 cmake samurai"
+subpackages="$pkgname-doc"
+source="https://doxygen.nl/files/doxygen-$pkgver.src.tar.gz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DGIT_EXECUTABLE=/bin/false \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE=MinSizeRel
+	cmake --build build
+}
+
+check() {
+	# Remove test that use bibtex
+	rm -f ./testing/012_cite.dox
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+16c348e2943319e38fe2c0c3539c9b481c613a094f59c4fe16251bf7c62fa77cd979cff97507296721dd7f6cd9c1bd2bda13ab1740a13cef8fda31601878d09d  doxygen-1.16.1.src.tar.gz
+"

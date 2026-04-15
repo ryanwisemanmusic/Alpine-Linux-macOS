@@ -1,0 +1,71 @@
+# Maintainer: Antoine Martin (ayakael) <dev@ayakael.net>
+pkgname=openterface-qt
+pkgver=0.5.14
+pkgrel=0
+pkgdesc="Openterface Mini-KVM Host Application"
+# armhf: missing qt6-qtmultimedia
+# riscv64: missing libgtk-3
+arch="all !armhf !riscv64"
+url="https://openterface.com/"
+license="AGPL-3.0-only"
+depends="
+	gst-plugins-good-qt
+	hicolor-icon-theme
+	qt6-qtmultimedia-ffmpeg
+	"
+makedepends="
+	cmake
+	ffmpeg-dev
+	libgudev-dev
+	libjpeg-turbo-dev
+	libusb-dev
+	libx11-dev
+	libxrandr-dev
+	libxv-dev
+	libxi-dev
+	patchelf
+	qt6-qtbase-dev
+	qt6-qtmultimedia-dev
+	qt6-qtserialport-dev
+	samurai
+	v4l-utils-dev
+"
+install="$pkgname.post-install"
+builddir="$srcdir"/Openterface_QT-$pkgver
+options="!check" # No testsuite
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/TechxArtisanStudio/Openterface_QT/archive/$pkgver.tar.gz
+	openterfaceQT.desktop
+	51-openterface-permissions.rules
+	use-system-libs.patch
+	"
+
+prepare() {
+	default_prepare
+	mkdir build && cd build
+	# OPENTERFACE_BUILD_STATIC: do not build vendored dependencies
+	cmake -DOPENTERFACE_BUILD_STATIC=OFF -DUSE_SHARED_FFMPEG=on ..
+}
+
+build() {
+	ninja -C build
+}
+
+package() {
+	install -Dm755 "$builddir"/build/openterfaceQT "$pkgdir"/usr/bin/openterfaceQT
+	install -Dm644 "$srcdir"/51-openterface-permissions.rules "$pkgdir"/etc/udev/rules.d/51-openterface-permissions.rules
+	install -Dm644 "$srcdir"/openterfaceQT.desktop "$pkgdir"/usr/share/applications/openterfaceQT.desktop
+	install -Dm644 "$builddir"/images/icon_32.png "$pkgdir"/usr/share/icons/hicolor/32x32/apps/openterfaceQT.png
+	install -Dm644 "$builddir"/images/icon_64.png "$pkgdir"/usr/share/icons/hicolor/64x64/apps/openterfaceQT.png
+	install -Dm644 "$builddir"/images/icon_128.png "$pkgdir"/usr/share/icons/hicolor/128x128/apps/openterfaceQT.png
+
+	# vanilla build does not set rpath, since it usually wants to use vendored libs
+	patchelf --set-rpath '/usr/lib' "$pkgdir"/usr/bin/openterfaceQT
+}
+
+sha512sums="
+927fef7496a23de98dea18ffff33a35c90c065047de3fdb72a1797793ca82345c187e0ec906133b3daaf5f681f0f077e1c3e436015ecb209badd425bb140af58  openterface-qt-0.5.14.tar.gz
+e39cfa04cbcb59e8ba54110a28eff41854f73fa7c4baeeed5433907c79781946f12bd3a731763caa1d591e664eab0650bdbd2a844954baa12bb96a76a17c6e4f  openterfaceQT.desktop
+f50d721a6a2d1e0183c81e99230e91e127ee6c6f3243af1cff3e3cb78e2913ebab3346ec8b461a4710220d1ce2e12a7cc960ded6e0dc2def539375c6e737b647  51-openterface-permissions.rules
+1b0974596ff76ba4002fc9c0081efb259e11bacdd58325d5441e20a325844a7f6f813f43327be0d227b5893447ce4ab1f88f7d4cf2ba01b5caf588fe31ba84e6  use-system-libs.patch
+"

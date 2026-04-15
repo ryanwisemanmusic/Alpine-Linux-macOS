@@ -1,0 +1,58 @@
+# Contributor: Danct12 <danct12@disroot.org>
+maintainer="Jakko <jahau@rocketmail.com>"
+pkgname=onboard
+_pkgver=1.4.3-7
+pkgver=${_pkgver/-/.}
+pkgrel=0
+pkgdesc="On-screen keyboard useful on tablet PCs or for mobility impaired users"
+url="https://github.com/onboard-osk/onboard"
+license="GPL-3.0-only"
+arch="all"
+depends="
+	gsettings-desktop-schemas
+	hunspell
+	iso-codes
+	librsvg
+	ncurses
+	py3-cairo
+	py3-dbus
+	py3-gobject3
+	python3
+	"
+makedepends="
+	bash
+	bash-dev
+	dconf-dev
+	eudev-dev
+	gtk+3.0-dev
+	hunspell-dev
+	intltool
+	libcanberra-dev
+	libxkbfile-dev
+	py3-distutils-extra
+	py3-gpep517
+	py3-setuptools
+	py3-wheel
+	python3-dev
+	"
+source="$pkgname-$_pkgver.tar.gz::https://github.com/onboard-osk/onboard/archive/refs/tags/$_pkgver.tar.gz
+	glibc-musl-error.patch
+	"
+builddir="$srcdir/$pkgname-$_pkgver"
+options="!check" # cannot open display
+subpackages="$pkgname-doc $pkgname-lang $pkgname-pyc"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" .dist/*.whl
+}
+
+sha512sums="
+a0d099b646151472a256849c604c80aa8e0f99ceaca5fbc6d8356923c76f05d89a8b5d39b0cb93a4a0238dda87cd960ba39af717e0252d98bc36a5b86620b285  onboard-1.4.3-7.tar.gz
+23742c38f877fc31260d4d7d3ff38c8d72541a77e099183d6633de74bcb223bbd34cedd88016f043867b2571f1196b59a3378a94186b468dbaa7a5d00661065a  glibc-musl-error.patch
+"

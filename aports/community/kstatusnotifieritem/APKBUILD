@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kstatusnotifieritem
+pkgver=6.24.0
+pkgrel=0
+pkgdesc="Implementation of Status Notifier Items"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later"
+makedepends="
+	doxygen
+	extra-cmake-modules
+	graphviz
+	kde-qdoc-common
+	kwindowsystem-dev
+	py3-build
+	py3-setuptools
+	py3-shiboken6
+	pyside6-dev
+	python3-dev
+	qt6-qtbase-dev
+	qt6-qttools-dev
+	samurai
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	py3-$pkgname:_py3
+	"
+_repo_url="https://invent.kde.org/frameworks/kstatusnotifieritem.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kstatusnotifieritem-$pkgver.tar.xz"
+options="!check" # Has a tests folder but not actually usable tests
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+_py3() {
+	amove usr/lib/python*
+}
+
+sha512sums="
+d5307caae5b1f6f2f8c228f920fac318f8f4fea33cdd6d1f7ef78a0a4a21e87fc2c4347515803f37772bddeeb741d7a2cfd5c433a525803b408b3635fb783bfd  kstatusnotifieritem-6.24.0.tar.xz
+"

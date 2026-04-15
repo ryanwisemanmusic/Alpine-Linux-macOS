@@ -1,0 +1,201 @@
+.TH MKINITFS-BOOTPARAMS "7" "July 2018" "mkinitfs @VERSION@" "Early startup"
+.SH NAME
+alpine-bootparams \- control the startup behavior using the kernel command line
+.SH DESCRIPTION
+.\" Add any additional description here
+.PP
+In early boot, the preferred way to supply configuration data to the running
+system is via kernel options. The kernel options are specified in the bootloader
+configuration and are supplied to the kernel and early userspace in early boot.
+The mechanism and options that are interpreted by the kernel itself are
+documented in \fIbootparam(7)\fR.
+.PP
+The options documented here are interpreted by the initramfs-init script that is
+part of the initramfs, see \fImkinitfs(1)\fR to learn how to customize it.
+.TP
+\fBaoe=\fI0.0\fR,\fI2.1\fR,\fI...\fR
+A comma separated list of ATA-over-Ethernet \fBshelf.slot\fR required for boot.
+If this is left empty, \fBaoe\fR will be enabled, but boot will not pause for
+device discovery.
+.TP
+\fBaoe_iflist=\fIeth0\fR,\fI...\fR
+This is a \fBmandatory\fR parameter if you intend to use \fBaoe\fR at boot. It
+is a comma separated list of ethernet interfaces to use with the \fBaoe\fR
+module.
+.TP
+\fBaoe_mtu=\fI1500\fR
+Maximum Transmission Unit (MTU) to use for \fBaoe\fR interfaces on networks
+that support jumbo packets. The default (usually 1500) is used if this is not
+set.
+.TP
+\fBblacklist=\fIMODULE\fR{,\fIMODULE\fR}
+This comma-separated list names kernel modules that modprobe will reject to load.
+.TP
+\fBchart\fR
+Enables bootchartd for measuring system startup speed.
+.TP
+\fBcryptdiscards\fR
+Enable the discard feature for encrypted Solid State Disks. This might have
+security implications.
+.TP
+\fBcryptdm=\fINAME\fR
+After the block device has been decrypted, make it available as
+/dev/mapper/\fINAME\fR.
+.TP
+\fBcryptheader=\fIDEVICE\fR
+When the LUKS headers and encrypted data are on different devices, this option
+specifies the device with the LUKS headers.
+.TP
+\fBcryptkey=\fIKEYFILE\fR
+Read the key to decrypt the encrypted partition from \fIKEYFILE\f. This can be
+a device or a regular file. When \fIKEYFILE\f is starting with EXEC= it
+specifies a command without arguments that is executed and the stdout used
+as key. The key offset and size can be specified by
+appending :<offset>:<size> to \fIKEYFILE\fR.
+.TP
+\fBcryptoffset=\fISECTORS\fR
+Indicate that the encrypted data begins the given number of sectors after the
+start of the block device.
+.TP
+\fBcryptroot=\fIDEVICE\fR
+Attempt to decrypt \fIDEVICE\fR.
+.TP
+\fBdasd\fR
+Enable DASD devices on S/390x architectures.
+.TP
+\fBzfcp\fR
+Enable zFCP SCSI devices on S/390x architectures.
+.TP
+\fBdebug_init\fR
+Print debug information during boot.
+.TP
+\fBinit=\fIPATH\fR
+Path to init program to execute instead of \fI/sbin/init\fR.
+.TP
+\fBinit_args=\fIARGUMENTS\fR
+Additional command line arguments for \fI/sbin/init\fR.
+.TP
+\fBip=\fICLIENT-IP\fR:\fISERVER-IP\fR:\fIGATEWAY-IP\fR:\fINETMASK\fR:\fIHOSTNAME\fR:\fIDEVICE\fR:\fIAUTOCONF\fR:\fIDNS-IP\fR:\fIDNS-IP\fR:\fINTP-IP\fR
+Specify the network configuration. The format is equivalent to the linux kernel
+option with the same name. Per default, the \fISERVER-IP\fR, \fIHOSTNAME\fR and
+\fINTP-IP\fR parameters are ignored by the initramfs. Consult the kernel
+documentation on \fInfsroot\fR for further information regarding the fields of
+this parameter.
+.TP
+\fBmodules=\fIMODULE\fR{,\fIMODULE\fR}
+Comma-separated list of kernel modules to load explicitly.
+.TP
+\fBnbd=\fIHOST\fR:\fIPORT\fR{,\fI...\fR}
+Comma-separated list of nbd servers. Connects to each server running
+\fInbd-server\fR to use its exported block device.
+.TP
+\fBoverlaytmpfs\fR
+When booting from a read-only filesystem, you can specify this flag to have
+your changes written to an in-memory temporary overlayfs.  The underlying
+filesystem will always be mounted read-only, the overlay always writable.
+.TP
+\fBoverlaytmpfsflags=\fIOPTIONS\fR
+Optional comma-separated list of tmpfs(5) mount options when \fBoverlaytmpfs\fR
+is used.  The default is \fBmode=0755,rw\fR, you cannot override \fBrw\fR.
+.TP
+\fBpanic=\fITIMEOUT\fR
+Disable the recovery/emergency shell when an error in initramfs occurs. Trigger a
+kernel panic instead.
+.TP
+\fBquiet\fR
+Generate less output.
+.TP
+\fBresume=\fIDEVICE\fR
+Partition to resume from. This can either be a swap partition or a partition containing a swap file. If this is a partition containing a swap file, you must also use \fBresume_offset\fR.
+.TP
+\fBresume_offset=\fIOFFSET\fR
+If \fBresume\fR specifies a partition containing a swap file to resume from, you must also specify the offset of that file from the beginning of the partition using this flag.
+.TP
+\fBroot=\fR(\fIDEVICE\fR | nfs:\fIIP-ADDRESS\fR:\fIPATH\fR)
+Device or NFS url for the root partition.
+.TP
+\fBrootflags=\fIOPTIONS\fR
+Mount options for the device specified with \fBroot=\fR.
+.TP
+\fBrootfstype=\fIFS_TYPE\fR
+File system type for the device specified with \fBroot=\fR.
+Allowed values are the same like the \fB\-t\fR option for \fImount(1)\fR.
+.TP
+\fBusrflags=\fIOPTIONS\fR
+Mount options for /usr, if in a different filesystem than \fBroot\fR.
+The special value \fBdisable\fR can be used to avoid /usr from being mounted
+from the initramfs. Only use it if you know what you are doing.
+.TP
+\fBs390x_net=qeth_l2,\fIBUS-ID\fR{,\fIBUS-ID\fR}
+Configure network devices for the S/390x architecture.
+.TP
+\fBsingle\fR
+Launch root shell before switching to the root partition.
+.TP
+\fBuevent_buf_size=\fIBYTES\fR
+Set the buffer size for kernel uevents.
+.PP
+If no \fBroot=\fR parameter is given, the initramfs will build a live system
+in memory from scratch. This is also called diskless mode.
+.PP
+When booting in diskless mode, the following options are also available:
+.TP
+\fBalpine_repo=\fR(\fIURL\fR | \fIPATH\fR)
+If set, \fI/etc/apk/repositories\fR will be filled with this. May be a
+comma-separated list of URLs.
+.TP
+\fBapkovl=\fR(\fIURL\fR | [\fIDEVICE\fR[:\fIFS_TYPE\fR]:]\fIPATH\fR)\fR
+A HTTP, HTTPS or FTP URL to an apkovl.tar.gz file which will be retrieved and
+applied. Can also be a filesystem path, optionally prepended with the device
+name with the /dev/ prefix.
+.TP
+\fBautodetect_serial=\fR(\fIno\fR | \fIsetconsole\fR | \fIsetconsole=REGEX{,REGEX,...}\fR)
+Configure serial console detection and setup.
+If set to \fIno\fR, automatic detection and setup of serial consoles is disabled.
+If set to \fIsetconsole\fR, the first detected serial console is set as the
+system console early during boot. If set to \fIsetconsole=REGEX{,REGEX,...}\fR,
+the same behavior applies, but \fIsetconsole\fR is only invoked if any of the
+provided regular expressions match the content of
+\fI/sys/class/dmi/id/modalias\fR.
+.TP
+\fBds=\fIOPTIONS\fR
+Data source for tiny-cloud. If \fIOPTIONS\fR starts with \fBnocloud\fR,
+tiny-cloud will be enabled.
+.TP
+\fBnokeep_apk_new\fR
+Setup a fresh system, ignore any \fBapkovl\fR.
+.TP
+\fBpkgs=\fIPACKAGE\fR{,\fIPACKAGE\fR}\fR
+Comma-separated list of packages to be installed.
+.TP
+\fBssh_key=\fR(\fIURL\fR | \fISSH_KEY\fR)
+This setting installs openssh and places the public key given as value in
+\fI/root/.ssh/authorized_keys\fR.
+If the value is an HTTP or FTP URL, it fetches the key(s) from there.
+.TP
+\fBsplash\fR
+Enable splash screen.
+.TP
+\fBusbdelay=\fINUMBER\fR
+Wait \fINUMBER\fR seconds for USB devices to show up before searching for boot
+media.
+.TP
+\fBwireguard=\fIINTERFACE;IP_ADDRESS{,IP_ADDRESS,...}[;WG_CONFIG_FILE]\fR
+Set up a wireguard interface named \fIINTERFACE\fR with the addresses
+\fIIP_ADDRESS\fR and use \fI/etc/wireguard/initrd.conf\fR or \fIWG_CONFIG_FILE\fR
+as a classic wg (not wg-quick) config.
+.TP
+\fBzfs_force=\fINUMBER\fR
+Enable force importing the root zpool on boot, even if it was previously mounted
+from a different system/OS.
+.SH FILES
+.TP
+\fI@datadir@/initramfs-init\fR
+Default script that will be run in the initramfs.
+.SH AUTHOR
+.PP
+Written by Natanael Copa <ncopa@alpinelinux.org>, Timo Teräs <timo.teras@iki.fi> and others.
+.SH "REPORTING BUGS"
+Alpine Linux GitLab: <https://gitlab.alpinelinux.org/alpine/mkinitfs/-/issues>
+.SH "SEE ALSO"
+nlplug-findfs(1), mkinitfs(1), bootparam(7)

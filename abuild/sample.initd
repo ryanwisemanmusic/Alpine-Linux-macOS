@@ -1,0 +1,16 @@
+#!/sbin/openrc-run
+
+name="SampleService"
+description="Sample init.d file for Alpine Linux"
+
+: "${command_user:="<USER>"}"
+
+command="/usr/sbin/<SERVICE>"
+: "${command_args:="--default-args"}"
+command_background="yes"
+pidfile="/run/$RC_SVCNAME.pid"
+
+depend() {
+	need net
+	after firewall
+}

@@ -1,0 +1,38 @@
+# Contributor: Galen Abell <galen@galenabell.com>
+# Maintainer: Galen Abell <galen@galenabell.com>
+pkgname=pass-git-helper
+pkgver=4.2.1
+pkgrel=0
+pkgdesc="git credential helper interfacing with pass, the standard unix password manager."
+url="https://github.com/languitar/pass-git-helper"
+arch="noarch"
+license="LGPL-3.0-only"
+depends="python3 py3-xdg"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest py3-pytest-cov py3-pytest-mock"
+subpackages="$pkgname-pyc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/languitar/pass-git-helper/archive/v$pkgver.tar.gz"
+
+provides="py3-pass-git-helper=$pkgver-r$pkgrel"
+replaces="py3-pass-git-helper"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+416ead6a1b226fa38fd7349adb6293a641f78d83d2039a6dbb1dcb93f60f097a91b70288dd4f430c957f83115e6be9a290cd0ffa78fa622c4359497f1afde2e6  pass-git-helper-4.2.1.tar.gz
+"

@@ -1,0 +1,50 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=baloo-widgets
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Widgets for Baloo"
+# armhf blocked by qt6-qtdeclarative -> baloo
+arch="all !armhf"
+url="https://community.kde.org/Baloo"
+license="LGPL-2.0-only AND LGPL-2.1-or-later"
+depends_dev="
+	baloo-dev
+	kconfig-dev
+	kfilemetadata-dev
+	ki18n-dev
+	kio-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+checkdepends="
+	dbus
+	xvfb-run
+	"
+subpackages="$pkgname-dev $pkgname-lang"
+_repo_url="https://invent.kde.org/libraries/baloo-widgets.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/baloo-widgets-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DBUILD_WITH_QT6=ON \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	dbus-run-session -- xvfb-run -a ctest --test-dir build -E "filemetadataitemcounttest"
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+sha512sums="
+2c55d5f7faf50be06bfe797fbf90c3d1cee6f62b611e051a3b0dc22eaa1375c8861590b1be5a3f34dc4be1cb5db91654d4bdd46e0155ca41749adf269c988024  baloo-widgets-25.12.3.tar.xz
+"

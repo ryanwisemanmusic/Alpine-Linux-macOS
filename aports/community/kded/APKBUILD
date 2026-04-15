@@ -1,0 +1,48 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kded
+pkgver=6.24.0
+pkgrel=0
+pkgdesc="Extensible deamon for providing system level services"
+# armhf blocked by qt6-qtdeclarative -> kconfig
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-only AND LGPL-2.1-or-later"
+depends_dev="
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdbusaddons-dev
+	kservice-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	kdoctools-dev
+	samurai
+	"
+subpackages="
+	$pkgname-systemd
+	$pkgname-dev
+	$pkgname-doc
+	"
+_repo_url="https://invent.kde.org/frameworks/kded.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kded-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+21d213fb7804fbd4d05bf7cc1121ed2fc95f9319eeaa06f03fefccb70d9d4b533a9f2fd63c84dd0a2925cb94d08b74f73134ffeadd1171655a246601346e0d43  kded-6.24.0.tar.xz
+"

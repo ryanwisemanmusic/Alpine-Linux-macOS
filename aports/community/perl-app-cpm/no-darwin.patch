@@ -1,0 +1,31 @@
+Not applicable on Linux, saves having to add this module as a separate aport
+
+--- a/META.json
++++ b/META.json
+@@ -42,7 +42,6 @@
+             "CPAN::Meta::Requirements" : "2.130",
+             "CPAN::Meta::YAML" : "0",
+             "Command::Runner" : "0.100",
+-            "Darwin::InitObjC" : "0",
+             "ExtUtils::Config" : "0",
+             "ExtUtils::Helpers" : "0",
+             "ExtUtils::Install" : "2.20",
+--- a/lib/App/cpm/CLI.pm
++++ b/lib/App/cpm/CLI.pm
+@@ -21,7 +21,6 @@ use CPAN::Meta;
+ use Command::Runner;
+ use Config;
+ use Cwd ();
+-use Darwin::InitObjC;
+ use ExtUtils::Helpers ();
+ use File::Copy ();
+ use File::Path ();
+@@ -427,8 +426,6 @@ sub _parse_builder_env {
+ sub install {
+     my ($self, $ctx, $master, $worker, $num) = @_;
+ 
+-    Darwin::InitObjC::maybe_init();
+-
+     my @task = $master->get_task($ctx);
+     Parallel::Pipes::App->run(
+         num => $num,

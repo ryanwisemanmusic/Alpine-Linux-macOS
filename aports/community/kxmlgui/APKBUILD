@@ -1,0 +1,81 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-frameworks
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kxmlgui
+pkgver=6.24.0
+pkgrel=0
+pkgdesc="User configurable main windows"
+# armhf blocked by qt6-qtdeclarative -> ki18n, qt6-qtmultimedia -> ktextwidgets
+arch="all !armhf"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-only AND LGPL-2.1-or-later"
+depends_dev="
+	attica-dev
+	kconfig-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kglobalaccel-dev
+	ki18n-dev
+	kiconthemes-dev
+	kitemviews-dev
+	ktextwidgets-dev
+	kwidgetsaddons-dev
+	py3-build
+	py3-setuptools
+	py3-shiboken6
+	pyside6-dev
+	python3-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	doxygen
+	extra-cmake-modules
+	kde-qdoc-common
+	qt6-qttools-dev
+	samurai
+	"
+checkdepends="
+	mesa-dri-gallium
+	xwayland-run
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-lang
+	py3-$pkgname:_py3
+	"
+_repo_url="https://invent.kde.org/frameworks/kxmlgui.git"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kxmlgui-$pkgver.tar.xz"
+
+build() {
+	export KDE_DOCS=/usr/share/kde/documentation
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+
+	cmake --build build --target prepare_docs
+	cmake --build build --target generate_docs
+	cmake --build build --target generate_qch
+}
+
+check() {
+	# kxmlgui_unittest, ktoolbar_unittest and ktooltiphelper_unittest are broken
+	LC_ALL=C wlheadless-run -- ctest --test-dir build -E '(kxmlgui|ktoolbar|ktooltiphelper)_unittest'
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	DESTDIR="$pkgdir" cmake --build build --target install_html_docs
+	DESTDIR="$pkgdir" cmake --build build --target install_qch_docs
+}
+
+_py3() {
+	amove usr/lib/python*
+}
+
+sha512sums="
+c9b04adbf96a617d0d01385ed69ecfe40cb5f6e284a473fca9e0550e81dfd2cccc319a98ce891bff0b17183d70adabe054f5d42080dbe7d6f0bbb5332becabb5  kxmlgui-6.24.0.tar.xz
+"

@@ -1,0 +1,87 @@
+#!/usr/bin/env atf-sh
+
+. $(atf_get_srcdir)/test_env.sh
+init_tests \
+	funcs_check_CBUILD \
+	funcs_check_missing_gcc \
+	funcs_check_missing_apk \
+	funcs_check_missing_git \
+	funcs_check_env_set_but_empty \
+	funcs_check_defconfig
+
+FUNCS=$(atf_get_srcdir)/../functions.sh
+
+funcs_check_CBUILD_body() {
+	atf_check -s exit:0 \
+		-o not-empty \
+		-e empty \
+		sh -e -c " . $FUNCS; echo \"\$CBUILD\""
+}
+
+funcs_check_missing_gcc_body() {
+	atf_check -s exit:0 \
+		sh -e -c "CC=false; . $FUNCS && test -z \"$CBUILD\""
+}
+
+funcs_check_missing_apk_body() {
+	atf_check -s exit:1 \
+		-e match:"Unable to deduce build architecture" \
+		sh -e -c "APK=false; . $FUNCS && test -z \"$CBUILD\""
+}
+
+funcs_check_missing_git_body() {
+	atf_check -s exit:0 \
+		-o empty \
+		-e empty \
+		sh -e -c "GIT=false . $FUNCS"
+}
+
+funcs_check_env_set_but_empty_body() {
+	for arch in aarch64 armv7 armhf ppc64le s390x x86 x86_64; do
+		for var in CC CXX HOSTCC HOSTCXX HOSTLD BUILDCC BUILDCXX BUILDLD; do
+			cat >script<<-EOF
+				unset $var
+				CHOST=$arch
+				. $FUNCS
+				if [ -n "\${$var+set}" ] && [ -z "\$$var" ]; then
+					echo '$var set but empty ($arch)'
+				fi
+			EOF
+			atf_check -s exit:0 \
+				-o empty \
+				-e empty \
+				sh script
+		done
+	done
+}
+
+funcs_check_defconfig_body() {
+	echo "CFLAGS=defcflags" > def.conf
+	echo "CFLAGS=syscflags" > etc.conf
+	echo "CFLAGS=usercflags" > user.conf
+
+	unset CFLAGS
+
+	# test /usr/share/abuild/default.conf
+	ABUILD_DEFCONF="$PWD"/def.conf ABUILD_CONF=/dev/null ABUILD_USERCONF=/dev/null \
+		atf_check -o match:"defcflags" \
+		sh -e -c " . $FUNCS; echo \"\$CFLAGS\""
+
+	# test /etc/abuild.conf
+	ABUILD_DEFCONF=/dev/null ABUILD_CONF="$PWD"/etc.conf ABUILD_USERCONF=/dev/null \
+		atf_check \
+		-o match:"syscflags" \
+		sh -e -c " . $FUNCS; echo \"\$CFLAGS\""
+
+	# user config ($HOME/.abuild/abuild.conf) wins over /etc/abuild.conf
+	ABUILD_DEFCONF="$PWD"/def.conf ABUILD_CONF="$PWD/etc.conf" ABUILD_USERCONF="$PWD/user.conf" \
+	atf_check \
+		-o match:"usercflags" \
+		sh -e -c " . $FUNCS; echo \"\$CFLAGS\""
+
+	# environment wins
+	ABUILD_DEFCONF="$PWD"/def.conf ABUILD_CONF="$PWD/etc.conf" ABUILD_USERCONF="$PWD/user.conf" \
+		CFLAGS="envcflags" atf_check \
+		-o match:"envcflags" \
+		sh -e -c " . $FUNCS; echo \"\$CFLAGS\""
+}

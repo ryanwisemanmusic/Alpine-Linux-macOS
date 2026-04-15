@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=plasma-welcome
+pkgver=6.6.4
+pkgrel=0
+pkgdesc="A friendly onboarding wizard for Plasma"
+# armhf blocked by qt6-qtdeclarative
+# s390x, and riscv64 blocked by qt6-qtwebengine -> kaccounts-integration
+arch="all !armhf !s390x !riscv64"
+url="https://kde.org/plasma-desktop/"
+license="GPL-2.0-or-later"
+depends="kirigami"
+makedepends="
+	extra-cmake-modules
+	kcmutils-dev
+	kconfigwidgets-dev
+	kcoreaddons-dev
+	kdbusaddons-dev
+	kdeclarative-dev
+	ki18n-dev
+	kio-dev
+	kirigami-addons-dev
+	kirigami-dev
+	knewstuff-dev
+	knotifications-dev
+	kservice-dev
+	ksvg-dev
+	kuserfeedback-dev
+	kwindowsystem-dev
+	libplasma-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+_repo_url="https://invent.kde.org/plasma/plasma-welcome.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/plasma-welcome-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+c739f8892bc6b18a3256ca91e246531559a809cb6e298f98dd35926a7c426479e205ed449b459395a3f1b1fa667e47e4c0429c62b411d87cafbd6e7ef50e1478  plasma-welcome-6.6.4.tar.xz
+"

@@ -1,0 +1,77 @@
+# Contributor: lauren n. liberda <lauren@selfisekai.rocks>
+maintainer="lauren n. liberda <lauren@selfisekai.rocks>"
+pkgname=gram
+pkgver=1.2.1
+pkgrel=0
+pkgdesc="Code editor"
+url="https://gram.liten.app/"
+# TODO: enable more
+arch="aarch64 x86_64"
+license="GPL-3.0-only OR AGPL-3.0-only"
+makedepends="
+	cargo
+	cargo-auditable
+	cmake
+	gettext-envsubst
+	libssh2-dev
+	libx11-dev
+	libxkbcommon-dev
+	mold
+	openssl-dev
+	protoc
+	sqlite-dev
+	zlib-dev
+	zstd-dev
+	"
+checkdepends="cargo-nextest"
+source="
+	gram-$pkgver.tar.gz::https://codeberg.org/GramEditor/gram/archive/$pkgver.tar.gz
+	0001-Distro-toolchain-hacks.patch
+	"
+builddir="$srcdir/gram"
+
+export RUSTFLAGS="$RUSTFLAGS -Clink-arg=-fuse-ld=mold"
+
+export LIBSSH2_SYS_USE_PKG_CONFIG=1
+export OPENSSL_NO_VENDOR=1
+export PKG_CONFIG_ALL_DYNAMIC=1
+export ZSTD_SYS_USE_PKG_CONFIG=1
+
+export GRAM_NO_BUNDLED_UNINSTALL="Use apk to uninstall"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CHOST" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release -p gram
+	cargo auditable build --frozen --release -p cli
+}
+
+check() {
+	cargo nextest run --frozen --workspace -- --skip tests::test_basic_terminal
+}
+
+package() {
+	install -Dm755 target/release/gram "$pkgdir"/usr/libexec/gram-editor
+	install -Dm755 target/release/cli "$pkgdir"/usr/bin/gram
+
+	mkdir -p "$pkgdir"/usr/share/applications/
+	APP_NAME=Gram \
+	APP_CLI=/usr/bin/gram \
+	APP_ICON=gram \
+	DO_STARTUP_NOTIFY=false \
+		envsubst \
+		< crates/gram/resources/gram.desktop.in \
+		> "$pkgdir"/usr/share/applications/gram.desktop
+
+	install -Dm644 crates/gram/resources/app-icon.png "$pkgdir"/usr/share/icons/hicolor/512x512/apps/gram.png
+	install -Dm644 crates/gram/resources/app-icon@2x.png "$pkgdir"/usr/share/icons/hicolor/1024x1024/apps/gram.png
+}
+
+sha512sums="
+68147723e81184beddf764f36f9fee23aa5a33ab6104311c92d24f6124e670ce6165d3dfddd59d5545c617aa8818c8ee9f50ac4cb072672bdd440d163f4817b9  gram-1.2.1.tar.gz
+8eb360057a56aece45c4d8277a32643d6bff6b6d1e5d04970d4830702e4974fe49aefbf00c2309ba859c5d1e7563e2ea605cdc5979f96117b75ee4b82cbd4533  0001-Distro-toolchain-hacks.patch
+"

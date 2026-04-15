@@ -1,0 +1,48 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qttranslations
+pkgver=6.11.0
+pkgrel=0
+pkgdesc="A cross-platform application and UI framework (Translations)"
+url="https://qt.io/"
+arch="noarch"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+makedepends="
+	cmake
+	perl
+	qt6-qtbase-dev
+	qt6-qttools-dev
+	samurai
+	"
+builddir="$srcdir/qttranslations-everywhere-src-${pkgver/_/-}"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qttranslations-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	# -j1 to prevent race conditions and missing translation files
+	cmake --build build -j1
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+9711e56b844118374b62ce99efcab81bc8e692657529e97a211c1c0ed227aa98cd060ff15fbe3cff74134efc557218ee7ad48a916a1a0f40cfe46f385e810e51  qttranslations-everywhere-src-6.11.0.tar.xz
+"

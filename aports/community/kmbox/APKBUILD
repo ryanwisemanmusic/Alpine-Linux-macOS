@@ -1,0 +1,41 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=kmbox
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="Library for accessing mail storages in MBox format"
+# armhf blocked by extra-cmake-modules
+arch="all !armhf"
+url="https://kontact.kde.org/"
+license="LGPL-2.0-or-later"
+depends_dev="kmime-dev"
+makedepends="$depends_dev
+	extra-cmake-modules
+	samurai
+	"
+subpackages="$pkgname-dev"
+_repo_url="https://invent.kde.org/pim/kmbox.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kmbox-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+33d6140aab65ed9f7517cc80699964d49e3196d1e6b7a112aae68e812a9a2e9627e71d3c592ef8304b4fb1760346a6d876eda5363a5aa7522365d7e39d0994cf  kmbox-25.12.3.tar.xz
+"

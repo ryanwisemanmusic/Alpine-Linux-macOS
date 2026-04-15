@@ -1,0 +1,41 @@
+# Contributor: Jonas <spameier+alpine@proton.me>
+# Maintainer: Jonas <spameier+alpine@proton.me>
+pkgname=bettercap
+pkgver=2.41.5
+pkgrel=4
+pkgdesc="The Swiss Army knife for 802.11, BLE, HID, CAN-bus, IPv4 and IPv6 networks reconnaissance and MITM attacks."
+url="https://www.bettercap.org/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	go
+	libpcap-dev
+	libusb-dev
+	python3
+	"
+depends="
+	iptables
+	iw
+	net-tools
+	wireless-tools
+	"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/bettercap/bettercap/archive/refs/tags/v$pkgver.tar.gz"
+options="net"
+
+build() {
+	make build
+}
+
+check() {
+	make test
+}
+
+package() {
+	install -Dm755 "$builddir/bettercap" -t "$pkgdir/usr/bin/"
+	install -Dm644 LICENSE.md "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+}
+
+sha512sums="
+9df5dd582383bc14c886f1ba8de6f15ed6ff3998762cf116824f3479de8b78691d5a21b1a239e4b4eac837db254f2888bd96403ef4a63189fc23b237723403b5  bettercap-2.41.5.tar.gz
+"

@@ -1,0 +1,33 @@
+# Contributor: Jonas <3426-spameier@users.gitlab.alpinelinux.org>
+# Maintainer: Jonas <3426-spameier@users.gitlab.alpinelinux.org>
+pkgname=pipeleek
+pkgver=0.57.2
+pkgrel=1
+pkgdesc="Pipeleek scans CI/CD logs and artifacts to detect leaked secrets and pivot from them"
+url="https://compasssecurity.github.io/pipeleek/"
+# armhf, armv7, x86: ulikunitz/xz/lzma
+# ppc64le, riscv64, s390x: headzoo/surf/agent
+arch="all !armhf !armv7 !ppc64le !riscv64 !s390x !x86"
+license="MIT"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/CompassSecurity/pipeleek/archive/refs/tags/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver/cmd/pipeleek"
+options="net"
+
+build() {
+	go build
+}
+
+check() {
+	go test -timeout 1h ./...
+}
+
+package() {
+	install -Dm755 "$builddir/pipeleek" -t "$pkgdir/usr/bin/"
+	install -Dm644 "$srcdir/$pkgname-$pkgver/LICENSE" -t "$pkgdir/usr/share/licenses/$pkgname/"
+}
+
+sha512sums="
+2c6e1eb925cac95645529c4313c5ef0c572e9c1117319305a33eef38d7aed944ded4df524c5306ef987b82e3d30bec1df129ee65fbd3e6f9a760251085e3d256  pipeleek-0.57.2.tar.gz
+"

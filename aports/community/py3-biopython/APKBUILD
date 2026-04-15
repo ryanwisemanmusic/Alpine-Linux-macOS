@@ -1,0 +1,36 @@
+# Contributor: Charles Pritchard <chuck@jumis.com>
+# Maintainer: Wen Heping <wenhepingalpine@sohu.com>
+pkgname=py3-biopython
+pkgver=1.86
+pkgrel=1
+pkgdesc="Python tools for computational molecular biology."
+options="!check" # test_NCBI_qblast hangs
+url="https://biopython.org/"
+arch="all"
+license="BSD-3-Clause"
+depends="py3-numpy python3"
+makedepends="py3-gpep517 py3-setuptools py3-wheel py3-numpy-dev python3-dev"
+subpackages="$pkgname-pyc"
+source="https://files.pythonhosted.org/packages/source/b/biopython/biopython-$pkgver.tar.gz"
+builddir="$srcdir/biopython-$pkgver"
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	.testenv/bin/python3 -m unittest
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+eeb0f086a92ee043561758c396b8832d7cb8f447ae1873c967493fbee18496d81fcd166b32267d00ae7989b7d8453024e785617abb462a7561feb8017f72a07e  biopython-1.86.tar.gz
+"

@@ -1,0 +1,55 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-applications
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=rocs
+pkgver=25.12.3
+pkgrel=0
+pkgdesc="An educational Graph Theory IDE"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://kde.org/applications/education/org.kde.rocs"
+license="GPL-2.0-or-later AND (LGPL-2.1-only OR LGPL-3.0-only) AND GFDL-1.2-only"
+makedepends="
+	boost-dev
+	extra-cmake-modules
+	grantlee-dev
+	karchive-dev
+	kconfig-dev
+	kcoreaddons-dev
+	kcrash-dev
+	kdeclarative-dev
+	kdoctools-dev
+	ki18n-dev
+	kitemviews-dev
+	ktexteditor-dev
+	ktexttemplate-dev
+	kxmlgui-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtsvg-dev
+	samurai
+	"
+checkdepends="xwayland-run"
+subpackages="$pkgname-doc $pkgname-lang $pkgname-dev"
+_repo_url="https://invent.kde.org/education/rocs.git"
+source="https://download.kde.org/stable/release-service/$pkgver/src/rocs-$pkgver.tar.xz"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	xwfb-run -- ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+193b20a0ff8b0961761b32c5d03879f9e47e8332b9aa76aa58acdfb4580b3b9e0b074b4170919b1974481e704b207b3f4a04109c3f6be3a25dc69999a1c85900  rocs-25.12.3.tar.xz
+"

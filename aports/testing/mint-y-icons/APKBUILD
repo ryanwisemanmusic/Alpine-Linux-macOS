@@ -1,0 +1,25 @@
+# Maintainer: Saijin-Naib <Saijin-Naib_package-maintenance@outlook.com>
+pkgname=mint-y-icons
+pkgver=1.9.1
+pkgrel=0
+pkgdesc="Mint-Y icon theme"
+options="!check" # It is an icon theme
+url="https://github.com/linuxmint/mint-y-icons"
+arch="noarch"
+license="GPL-3.0-or-later"
+source="$pkgname-$pkgver.tar.gz::https://github.com/linuxmint/mint-y-icons/archive/$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+
+package() {
+	mkdir -p "$pkgdir"
+	mv -v "$builddir"/usr "$pkgdir"/
+
+	install -Dm644 "$builddir"/debian/changelog \
+		       "$pkgdir"/usr/share/doc/"$pkgname"/changelog
+	install -Dm644 "$builddir"/debian/copyright \
+		       "$pkgdir"/usr/share/doc/"$pkgname"/copyright
+}
+
+sha512sums="
+473d71ff5b6a8760b1b8fc64c15059839d1edcf118082f6277327e036bcd992eb62e89d0dd11a604d7a3e5b613122ec3a15e458416c0eb10b160800d240bff24  mint-y-icons-1.9.1.tar.gz
+"

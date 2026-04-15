@@ -1,0 +1,56 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=qt6
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qt6-qtimageformats
+pkgver=6.11.0
+pkgrel=0
+pkgdesc="Plugins for additional image formats: TIFF, MNG, TGA, WBMP, WEBP"
+url="https://qt.io/"
+arch="all"
+license="LGPL-2.1-only AND LGPL-3.0-only AND GPL-3.0-only AND Qt-GPL-exception-1.0"
+depends_dev="$pkgname
+	libmng-dev
+	libwebp-dev
+	qt6-qtbase-dev
+	"
+makedepends="$depends_dev
+	cmake
+	perl
+	samurai
+	"
+subpackages="$pkgname-dev"
+
+case $pkgver in
+	*_alpha*|*_beta*|*_rc*) _rel=development_releases;;
+	*) _rel=official_releases;;
+esac
+source="https://download.qt.io/$_rel/qt/${pkgver%.*}/${pkgver/_/-}/submodules/qtimageformats-everywhere-src-${pkgver/_/-}.tar.xz"
+options="!check" # No tests
+builddir="$srcdir/qtimageformats-everywhere-src-${pkgver/_/-}"
+
+# secfixed:
+#   6.5.2-r1:
+#     - CVE-2023-4863
+
+build() {
+	export CFLAGS="$CFLAGS -g1 -flto=auto"
+	export CXXFLAGS="$CXXFLAGS -g1 -flto=auto"
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/lib/qt6/sbom
+}
+
+sha512sums="
+07534cf1d3506a8821f0fc985db84b7ea6513a3b23861c1410bdcbe16f74f13ab1633ece1058750f4ffcf9b76be2b3754d14ddba7cd43d24fdb93011fa4c4cf4  qtimageformats-everywhere-src-6.11.0.tar.xz
+"

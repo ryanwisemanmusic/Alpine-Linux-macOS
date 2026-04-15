@@ -1,0 +1,38 @@
+# Contributor: Lindsay Zhou <i@lin.moe>
+# Maintainer: Lindsay Zhou <i@lin.moe>
+pkgname=fcitx5-anthy
+pkgver=5.1.9
+pkgrel=0
+pkgdesc="anthy input method support for fcitx5"
+url="https://github.com/fcitx/fcitx5-anthy"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	anthy-dev
+	cmake
+	extra-cmake-modules
+	gettext-dev
+	fcitx5-dev
+	fcitx5-qt-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+source="$pkgname-$pkgver.tar.gz::https://github.com/fcitx/fcitx5-anthy/archive/refs/tags/$pkgver.tar.gz"
+options="!check" # no tests
+
+build() {
+	CFLAGS="$CFLAGS -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=None \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+436d207e6badc904d04981c43c3d4379a326030ba031edef4c1454418e3c58dd19f0cee13f262813584a629228c0dc2fc1463158fe0b590610adbd71cce0a47d  fcitx5-anthy-5.1.9.tar.gz
+"

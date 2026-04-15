@@ -1,0 +1,98 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Contributor: Danct12 <danct12@disroot.org>
+# Contributor: Clayton Craft <clayton@craftyguy.net>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+maintainer="team/phosh <newbie13xd@gmail.com>"
+pkgname=phoc
+pkgver=0.54.0
+pkgrel=0
+pkgdesc="wlroots based Phone compositor for the Phosh shell"
+arch="all"
+url="https://gitlab.gnome.org/World/Phosh/phoc"
+license="GPL-3.0-only"
+depends="
+	$pkgname-schemas
+	dbus
+	gsettings-desktop-schemas
+	mutter-schemas
+	"
+_wlrootsmakedepends="
+	eudev-dev
+	glslang
+	hwdata-dev
+	libcap-dev
+	libdisplay-info-dev
+	libseat-dev
+	libxcb-dev
+	xcb-util-image-dev
+	xcb-util-renderutil-dev
+	xcb-util-wm-dev
+	xkeyboard-config-dev
+	xwayland-dev
+	"
+makedepends="
+	glib-dev
+	gmobile-dev
+	gnome-desktop-dev
+	json-glib-dev
+	libdrm-dev
+	libinput-dev
+	libxkbcommon-dev
+	mesa-dev
+	meson
+	pixman-dev
+	py3-docutils
+	wayland-dev
+	wayland-protocols
+	$_wlrootsmakedepends
+	"
+checkdepends="xvfb-run"
+subpackages="$pkgname-dbg $pkgname-doc $pkgname-schemas::noarch"
+options="!check" # Needs fullblown EGL
+source="https://sources.phosh.mobi/releases/phoc/phoc-${pkgver/_/.}.tar.xz"
+replaces="wlroots-phosh"
+builddir="$srcdir/$pkgname-${pkgver/_/.}"
+
+prepare() {
+	default_prepare
+
+	patch -Np1 < subprojects/packagefiles/wlroots/0001-Revert-layer-shell-error-on-0-dimension-without-anch.patch \
+		-d subprojects/wlroots-0.19.x
+}
+
+build() {
+	abuild-meson \
+		-Db_lto=true \
+		-Dembed-wlroots=enabled \
+		-Dman=true \
+		-Dtests="$(want_check && echo true || echo false)" \
+		--default-library=static \
+		. output
+	meson compile -C output
+}
+
+check() {
+	xvfb-run -a meson test --print-errorlogs -C output
+}
+
+package() {
+	DESTDIR="$pkgdir/" meson install --no-rebuild -C output
+	install -Dm755 tools/scale-to-fit \
+		-t "$pkgdir"/usr/bin
+
+	# remove unneeded wlroots dev. files
+	rm -r "$pkgdir"/usr/include
+	rm -r "$pkgdir"/usr/lib/libwlroots-*.a
+	rm -r "$pkgdir"/usr/lib/pkgconfig
+}
+
+schemas() {
+	pkgdesc="$pkgdesc (schemas)"
+	depends=
+
+	amove usr/share/glib-2.0/schemas
+}
+
+sha512sums="
+db7b22c24a811c75d2cc4db9a1862e85387fb1e9fe3ffa42e568404122754ed8c5c762a2b9eddb808a5f3309a20b9111d190bb6abfb592a127760000987d8e18  phoc-0.54.0.tar.xz
+"

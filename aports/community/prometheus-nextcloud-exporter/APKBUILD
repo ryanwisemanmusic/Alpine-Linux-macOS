@@ -1,0 +1,44 @@
+# Contributor: Guy Godfroy <guy.godfroy@gugod.fr>
+# Maintainer: Guy Godfroy <guy.godfroy@gugod.fr>
+pkgname=prometheus-nextcloud-exporter
+_pkgname=nextcloud-exporter
+pkgver=0.9.0
+pkgrel=4
+pkgdesc="Prometheus nextcloud exporter"
+url="https://github.com/xperimental/nextcloud-exporter"
+arch="all"
+license="MIT"
+makedepends="go"
+install="$pkgname.pre-install"
+subpackages="$pkgname-openrc"
+source="$_pkgname-$pkgver.tar.gz::https://github.com/xperimental/nextcloud-exporter/archive/v$pkgver.tar.gz
+	nextcloud-exporter.initd
+	nextcloud-exporter.confd
+	"
+builddir="$srcdir/$_pkgname-$pkgver"
+options="net" # Go dependencies
+
+build() {
+	GOLDFLAGS="-X main.Version=$pkgver"
+	go build \
+		-tags netgo \
+		-ldflags "$GOLDFLAGS" \
+		-o nextcloud-exporter
+}
+
+check() {
+	go test -cover ./...
+}
+
+package() {
+	install -Dm755 nextcloud-exporter "$pkgdir"/usr/bin/nextcloud-exporter
+
+	install -Dm755 "$srcdir"/nextcloud-exporter.initd "$pkgdir"/etc/init.d/nextcloud-exporter
+	install -Dm644 "$srcdir"/nextcloud-exporter.confd "$pkgdir"/etc/conf.d/nextcloud-exporter
+}
+
+sha512sums="
+f92947b8bd39d87cfe9eccff936f9ad925b727c9274ab762a0eb57e12bb9878a1a51e8d703634bdb83e55f827f78221c190a117647350852d63ce5cfa34ca12c  nextcloud-exporter-0.9.0.tar.gz
+4271cac29895943c2d6b7a8bf5a1d35799c1af2a558b7599ffafe037e3de5186773485eb398623e50a4926a431c6cd4942049e16d970e5cf922258c0ffede180  nextcloud-exporter.initd
+c3bbcaf220838f405fae2c23f67902d9efe247713b96b024f713b843c015dcb8fa7a3427f681dc9f682a7dae42dfec461ed329a9cfcaa1bce95eecee28ce8d59  nextcloud-exporter.confd
+"

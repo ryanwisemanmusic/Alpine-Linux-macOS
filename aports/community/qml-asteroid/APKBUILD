@@ -1,0 +1,59 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=asteroid
+maintainer="Bart Ribbers <bribbers@disroot.org>"
+pkgname=qml-asteroid
+pkgver=2.0_git20260321
+pkgrel=0
+_commit="0327f0d9b2c579b90a3cbc38d669a80f2d1d7ffb"
+pkgdesc="QML components, styles and demos for AsteroidOS"
+url="https://github.com/AsteroidOS/qml-asteroid"
+# armhf blocked by qt5-qtdeclarative
+arch="all !armhf"
+license="LGPL-2.1-only"
+depends="
+	qt6-qt5compat
+	qt6-qtvirtualkeyboard
+	"
+# grep is required for the asteroid-generate-desktop.sh script, which is used by other packages
+depends_dev="
+	grep
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtsvg-dev
+	qt6-qttools-dev
+	"
+makedepends="$depends_dev
+	extra-cmake-modules
+	mapplauncherd-qt-dev
+	samurai
+	"
+subpackages="$pkgname-dbg $pkgname-dev"
+#source="$pkgname-$pkgver.tar.gz::https://github.com/AsteroidOS/qml-asteroid/archive/refs/tags/$pkgver.tar.gz"
+source="$pkgname-$_commit.tar.gz::https://github.com/AsteroidOS/qml-asteroid/archive/$_commit.tar.gz"
+options="!check" # No tests
+builddir="$srcdir/$pkgname-$_commit"
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DINSTALL_QML_IMPORT_DIR=/usr/lib/qt6/qml \
+		-DBUILD_WITH_QT6=ON
+	cmake --build build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+dev() {
+	default_dev
+
+	amove usr/share/*/cmake
+	amove usr/bin
+}
+
+sha512sums="
+481fc34a07dcf90d06304ea78cc82b08344dd87d068f45e6dfbbdde3a3b8dacac4d2856eed6b9c5ce04cb875640bc11369913b56a354ed1fbb77c6801e0c6245  qml-asteroid-0327f0d9b2c579b90a3cbc38d669a80f2d1d7ffb.tar.gz
+"

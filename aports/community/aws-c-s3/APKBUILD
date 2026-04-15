@@ -1,0 +1,54 @@
+# Contributor: Holger Jaekel <holger.jaekel@gmx.de>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=aws-c-s3
+pkgver=0.12.2
+pkgrel=0
+pkgdesc="AWS C99 library implementation for communicating with the S3 service"
+url="https://github.com/awslabs/aws-c-s3"
+arch="all"
+license="Apache-2.0"
+makedepends="
+	aws-c-auth-dev
+	aws-c-cal-dev
+	aws-c-common-dev
+	aws-c-compression-dev
+	aws-c-http-dev
+	aws-c-io-dev
+	aws-c-sdkutils-dev
+	aws-checksums-dev
+	cmake
+	curl-dev
+	s2n-tls-dev
+	samurai
+	"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/awslabs/aws-c-s3/archive/refs/tags/v$pkgver.tar.gz"
+options="!check"  # The unit tests require an AWS account with S3 buckets set up in a particular way.
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		local crossopts="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	CFLAGS="$CFLAGS -flto=auto" \
+	CXXFLAGS="$CXXFLAGS -flto=auto" \
+	cmake -B build -G Ninja \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=/usr/lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=None \
+		-DBUILD_TESTING="$(want_check && echo ON || echo OFF)" \
+		$crossopts
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+3ceb6058e6b382a9539d00b6d87402e46a981f3d439a595ce749f4623940d1a8149d6aa2cf2a47e9529979463be9e66abd627814ccf14346cd1348d7065f0fc3  aws-c-s3-0.12.2.tar.gz
+"

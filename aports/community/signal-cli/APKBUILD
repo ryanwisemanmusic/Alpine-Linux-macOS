@@ -1,0 +1,46 @@
+# Contributor: Siva Mahadevan <me@svmhdvn.name>
+# Contributor: Simon Frankenberger <simon-alpine@fraho.eu>
+# Maintainer: Simon Frankenberger <simon-alpine@fraho.eu>
+pkgname=signal-cli
+pkgver=0.14.2
+pkgrel=0
+pkgdesc="commandline interface for libsignal-service-java"
+url="https://github.com/AsamK/signal-cli"
+# 32-bit: blocked by openjdk24
+# cargo and rust not available on s390x and riscv64
+# java-libsignal-client not available on ppc64le
+arch="x86_64 aarch64"
+license="GPL-3.0-or-later"
+depends="java-libsignal-client"
+makedepends="openjdk25-jdk"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/AsamK/signal-cli/archive/v$pkgver.tar.gz
+	"
+
+build() {
+	./gradlew installDist
+}
+
+check() {
+	./gradlew check -Plibsignal_client_path="/usr/share/java/libsignal-client/signal-client-java.jar"
+}
+
+package() {
+	local buildhome="build/install/$pkgname"
+	local installhome="/usr/share/java/$pkgname"
+
+	install -dm755 "$pkgdir/$installhome/lib"
+	install -m644 "$buildhome"/lib/* "$pkgdir/$installhome/lib"
+
+	install -Dm755 "$buildhome/bin/$pkgname" "$pkgdir/$installhome/bin/$pkgname"
+	install -dm755 "$pkgdir/usr/bin"
+	ln -s "$installhome/bin/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+	rm -v "$pkgdir/$installhome/lib"/libsignal-client-*.jar
+	ln -sv /usr/share/java/libsignal-client/signal-client-java.jar "$pkgdir/$installhome/lib/signal-client-java.jar"
+	sed -i -e 's/libsignal-client-[0-9.]\+\.jar/signal-client-java.jar/g' "$pkgdir/$installhome/bin/$pkgname"
+}
+
+sha512sums="
+08f439553b38f5a9a9ef2fe5a48138aeb3351878f437ca9cb12eec00d229b64364b6e877c39397aeffd6a5c284035a3a01811733aa9ac679b7b1509925886a2f  signal-cli-0.14.2.tar.gz
+"

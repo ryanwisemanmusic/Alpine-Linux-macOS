@@ -1,0 +1,63 @@
+# Contributor: Adrian Siekierka <kontakt@asie.pl>
+# Maintainer: Thomas Kienlen <kommander@laposte.net>
+pkgname=openttd
+pkgver=15.2
+pkgrel=0
+pkgdesc="Open source version of the Transport Tycoon Deluxe simulator"
+url="https://www.openttd.org"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="
+	cmake
+	curl-dev
+	fontconfig-dev
+	fluidsynth-dev
+	freetype-dev
+	harfbuzz-dev
+	icu-dev
+	libpng-dev
+	lzo-dev
+	samurai
+	sdl2-dev
+	xz-dev
+	zlib-dev
+	"
+subpackages="$pkgname-doc $pkgname-lang::noarch"
+source="
+	https://cdn.openttd.org/openttd-releases/$pkgver/openttd-$pkgver-source.tar.xz
+	no-sse4.patch
+	"
+
+build() {
+	cmake -B build \
+		-G "Ninja" \
+		-DCMAKE_INSTALL_BINDIR=bin \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_DATADIR=share/games \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_EXE_LINKER_FLAGS="$LDFLAGS -Wl,-z,stack-size=1048576"
+	cmake --build build
+}
+
+check() {
+	cmake --build build --target openttd_test
+	./build/openttd_test
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --build build --target install
+}
+
+lang() {
+	pkgdesc="$pkgdesc (localizations)"
+
+	cd "$pkgdir"
+	mkdir -p "$subpkgdir"/usr/share/games/openttd/lang
+	find usr/share/games/openttd/lang/ ! -name 'english.lng' -type f \
+		-exec mv {} "$subpkgdir"/{} \;
+}
+
+sha512sums="
+30bc2f91791a7ed7b3cb83b3677b3b66a35507524638834f33c5d46d8a2a662bdc1d498c7300ee2a72e52a3d3318965d6ec858f3c90070ee8983fac46cd2eddb  openttd-15.2-source.tar.xz
+ea6814a5af2fa3721ec18d11a3dde0f640b7d9dee937afeac88edc4d79b90a57a5d1f111c55acde2fc66089968c71dc23ad93963855d17d3d8897f6f9b7fdd7e  no-sse4.patch
+"

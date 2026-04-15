@@ -1,0 +1,63 @@
+# The group tag is just to easily find this APKBUILD by some scripts for automation
+# group=kde-plasma
+maintainer="team/kde <bribbers@disroot.org>"
+pkgname=plasma-systemmonitor
+pkgver=6.6.4
+pkgrel=0
+pkgdesc="An application for monitoring system resources"
+# armhf blocked by qt6-qtdeclarative
+arch="all !armhf"
+url="https://kde.org/plasma-desktop/"
+license="LicenseRef-KDE-Accepted-GPL AND LicenseRef-KDE-Accepted-LGPL AND CC0-1.0"
+depends="
+	kirigami
+	ksystemstats
+	"
+makedepends="
+	extra-cmake-modules
+	kconfig-dev
+	kdbusaddons-dev
+	kdeclarative-dev
+	kglobalaccel-dev
+	ki18n-dev
+	kio-dev
+	kirigami-addons-dev
+	kitemmodels-dev
+	knewstuff-dev
+	kservice-dev
+	libksysguard-dev
+	qt6-qtbase-dev
+	qt6-qtdeclarative-dev
+	qt6-qtdeclarative-private-dev
+	samurai
+	"
+subpackages="$pkgname-lang"
+
+case "$pkgver" in
+	*.*.9*) _rel=unstable;;
+	*) _rel=stable;;
+esac
+
+_repo_url="https://invent.kde.org/plasma/plasma-systemmonitor.git"
+source="https://download.kde.org/$_rel/plasma/$pkgver/plasma-systemmonitor-$pkgver.tar.xz"
+options="!check" # No tests
+
+build() {
+	cmake -B build -G Ninja \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	cmake --build build
+}
+
+check() {
+	ctest --test-dir build
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+}
+
+sha512sums="
+496aea0c04ee0f715d25dc67a49236575a89bf57b59c4a3b0cfd60a03f78bbd237c237f3487ccce6dc7e0c660e1ca6bf2f2f781fd1112f2796bb9b05759f2b4a  plasma-systemmonitor-6.6.4.tar.xz
+"

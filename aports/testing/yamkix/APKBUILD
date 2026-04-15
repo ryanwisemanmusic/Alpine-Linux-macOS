@@ -1,0 +1,45 @@
+# Contributor: Galen Abell <galen@galenabell.com>
+# Maintainer: Galen Abell <galen@galenabell.com>
+pkgname=yamkix
+pkgver=0.15.0
+pkgrel=0
+pkgdesc="A python based yaml formatter"
+url="https://github.com/looztra/yamkix"
+arch="noarch"
+license="Apache-2.0"
+depends="py3-rich py3-ruamel.yaml py3-typer"
+makedepends="py3-gpep517 py3-hatchling py3-hatch-vcs py3-packaging"
+checkdepends="py3-faker py3-pytest py3-pytest-datadir py3-pytest-mock"
+subpackages="$pkgname-pyc"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/looztra/yamkix/archive/v$pkgver.tar.gz
+	hatch-vcs.patch
+	"
+
+[ "$CARCH" = "riscv64" ] && makedepends="$makedepends $checkdepends"
+
+build() {
+	export SETUPTOOLS_SCM_PRETEND_VERSION=$pkgver
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	.testenv/bin/python3 -m installer .dist/*.whl
+	# Skip tests which use uv to install other packages.
+	.testenv/bin/python3 -m pytest \
+		--deselect tests/integration/test_kubesplit_compat.py \
+		--deselect tests/integration/test_package_install.py
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+3270b3fab0a6e34f99459acb534dc30eb163d4aefa81697f24852d9634c2c6f29b0aeababb460ecffa8ef9b180f3a70677b49caefbb4ed6701c57ad9b9b4c1d4  yamkix-0.15.0.tar.gz
+0b900b69bf8ca94d56c2163b4165c5db73514f079b8eec21e7118be82a367834a426fddae2c640df65e0283f71e2e9e1e9a3d2c64494253a33b80a175ae6ef5a  hatch-vcs.patch
+"

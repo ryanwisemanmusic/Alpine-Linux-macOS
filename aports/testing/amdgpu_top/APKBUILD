@@ -1,0 +1,36 @@
+maintainer="Hugo Osvaldo Barrera <hugo@whynothugo.nl>"
+pkgname=amdgpu_top
+pkgver=0.11.3
+pkgrel=0
+pkgdesc="Tool to display AMDGPU usage"
+url="https://github.com/Umio-Yasuno/amdgpu_top"
+# loongarch64: https://github.com/bytecodealliance/rustix/pull/1503
+arch="all !loongarch64"
+license="MIT"
+makedepends="libdrm-dev cargo-auditable"
+subpackages="$pkgname-doc"
+source="amdgpu_top-$pkgver.tar.gz::https://github.com/Umio-Yasuno/amdgpu_top/archive/refs/tags/v$pkgver.tar.gz"
+options="net" # fetch dependencies
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --target="$CTARGET" --release --frozen
+}
+
+check() {
+	cargo test --frozen
+}
+
+package() {
+	install -Dm755 -t "$pkgdir"/usr/bin/ target/$CTARGET/release/amdgpu_top
+	install -Dm 644 docs/amdgpu_top.1 -t "$pkgdir"/usr/share/man/man1/
+}
+
+sha512sums="
+39ac14d1f37b4a944b453989bf9acd703deb25beb3b7f02f1b3210e7862813f97cb19cffa7ca74c68a095c430ec6da6824930b015eb59b80a3cd19ebe91224ed  amdgpu_top-0.11.3.tar.gz
+"

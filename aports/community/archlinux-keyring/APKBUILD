@@ -1,0 +1,26 @@
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=archlinux-keyring
+pkgver=20260409
+pkgrel=0
+pkgdesc="Arch Linux PGP keyring"
+url="https://gitlab.archlinux.org/archlinux/archlinux-keyring"
+arch="noarch"
+license="GPL-3.0-or-later"
+makedepends="
+	python3
+	sequoia-sq
+	"
+source="https://gitlab.archlinux.org/archlinux/archlinux-keyring/-/archive/$pkgver/archlinux-keyring-$pkgver.tar.gz"
+options="!check" # no tests
+
+build() {
+	./keyringctl -v build
+}
+
+package() {
+	install -Dm644 build/* -t "$pkgdir"/usr/share/pacman/keyrings
+}
+
+sha512sums="
+9eeb176e485db322d818b90a63ae471657e51d86ca5e5bc7ccc85b1094b86935e1a49861d0d4199d4e5d9b4a827e70eb5f6cecff53fbfc852a406cda5cc0c13b  archlinux-keyring-20260409.tar.gz
+"

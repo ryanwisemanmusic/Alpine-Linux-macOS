@@ -1,0 +1,37 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=zk
+pkgver=0.15.2
+pkgrel=4
+pkgdesc="Plain text note-taking application with CLI interface"
+url="https://github.com/zk-org/zk"
+arch="all"
+license="GPL-3.0-only"
+depends="fzf"
+makedepends="go"
+subpackages="$pkgname-doc"
+options="chmod-clean net"
+source="https://github.com/zk-org/zk/archive/v$pkgver/zk-$pkgver.tar.gz
+	"
+
+export GOCACHE="${GOCACHE:-"$srcdir/go-cache"}"
+export GOTMPDIR="${GOTMPDIR:-"$srcdir"}"
+export GOMODCACHE="${GOMODCACHE:-"$srcdir/go"}"
+
+build() {
+	make VERSION="$pkgver"
+}
+
+check() {
+	make test
+}
+
+package() {
+	install -Dm755 zk "$pkgdir"/usr/bin/zk
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	cp -r docs/* "$pkgdir"/usr/share/doc/$pkgname
+}
+
+sha512sums="
+9e7f5b6ffbc529c765d02871db41167a089801fef4da948d2a0cf578aa4e418255ff0370f5a21b5306e27f85fefdb80111739a66e7a10044813baaee65e2fadc  zk-0.15.2.tar.gz
+"

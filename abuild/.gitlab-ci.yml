@@ -1,0 +1,46 @@
+stages:
+  - verify
+
+tests:
+  image:
+    name: alpinelinux/abuild-ci
+  stage: verify
+  script:
+    - doas apk upgrade
+    - make
+    - make check
+    - make install DESTDIR=/tmp/abuild
+  tags:
+    - docker-alpine
+    - x86_64
+
+tests-pigz:
+  image:
+    name: alpinelinux/abuild-ci
+  stage: verify
+  script:
+    - doas apk upgrade
+    - doas apk add pigz
+    - make
+    - make check
+  tags:
+    - docker-alpine
+    - x86_64
+
+build-clang:
+  image:
+    name: alpinelinux/abuild-ci
+  stage: verify
+  script: [CC=clang make]
+  tags:
+    - docker-alpine
+    - x86_64
+
+build-scan:
+  image:
+    name: alpinelinux/abuild-ci
+  stage: verify
+  script: [scan-build --status-bugs make]
+  tags:
+    - docker-alpine
+    - x86_64

@@ -1,0 +1,69 @@
+maintainer="Clayton Craft <clayton@craftyguy.net>"
+pkgname=mkosi
+pkgver=26_git20260409
+pkgrel=0
+_commit="5f39f28f91c9401572e34f7bc8e23cee53531388"
+pkgdesc="Build Bespoke OS Images"
+url="https://mkosi.systemd.io/"
+arch="noarch"
+license="LGPL-2.1-or-later"
+depends="
+	$pkgname-sandbox
+	coreutils
+	distribution-gpg-keys
+	python3
+	"
+makedepends="
+	go-md2man
+	py3-gpep517
+	py3-setuptools
+	"
+checkdepends="py3-pytest"
+subpackages="
+	$pkgname-pyc
+	$pkgname-doc
+	$pkgname-sandbox
+	"
+source="$pkgname-$_commit.tar.gz::https://github.com/systemd/mkosi/archive/$_commit.tar.gz
+	4274.patch
+	"
+builddir="$srcdir/$pkgname-$_commit"
+options="!check" # fails in CI, works locally with rootbld
+
+build() {
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+
+	for manpage in mkosi-addon.1.md  mkosi-initrd.1.md  mkosi-sandbox.1.md  mkosi.1.md  mkosi.news.7.md; do
+		go-md2man -in mkosi/resources/man/"$manpage" -out mkosi/resources/man/"${manpage%.md}"
+	done
+
+}
+
+check() {
+	python3 -m venv --clear --without-pip --system-site-packages .testenv
+	gpep517 install-wheel --destdir .testenv .dist/*.whl
+	.testenv/bin/python3 -m pytest
+}
+
+package() {
+	gpep517 install-wheel --destdir "$pkgdir" \
+		.dist/*.whl
+
+	install -Dm644 mkosi/resources/man/*.1 -t "$pkgdir/usr/share/man/man1/"
+	install -Dm644 mkosi/resources/man/*.7 -t "$pkgdir/usr/share/man/man7/"
+}
+
+sandbox() {
+	pkgdesc="$pkgname (sandboxing utility)"
+	depends="python3"
+
+	amove usr/bin/mkosi-sandbox
+	amove usr/lib/python*/site-packages/mkosi/sandbox.py
+}
+
+sha512sums="
+e2344befa3d4348d8cc7928e15d89a8efb15aa6a655e7a60ffe314e29578d86b63e8307eb252ee1fca718e68b9d33db882e99ca4611b87fa6743c7396b0bdf26  mkosi-5f39f28f91c9401572e34f7bc8e23cee53531388.tar.gz
+f7fc80bad81ff73b70cfcb7db15e108d19f8d8825475ab2ce62d5b9ea7955e843ae06586e0d6a2bd662064b31bfe46c5e6ed25ae09ed99c508fcc496d1201fa2  4274.patch
+"

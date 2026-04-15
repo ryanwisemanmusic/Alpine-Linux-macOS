@@ -1,0 +1,55 @@
+# Contributor: Will Sinatra <wpsinatra@gmail.com>
+# Maintainer: Will Sinatra <wpsinatra@gmail.com>
+pkgname=ruby-yard
+_gemname=${pkgname#ruby-}
+pkgver=0.9.40
+pkgrel=0
+pkgdesc="a documentation generation tool for Ruby"
+url="https://rubygems.org/gems/yard"
+arch="noarch"
+license="MIT"
+checkdepends="ruby-rake ruby-bundler ruby-test-unit ruby-test-unit-rr"
+source="$pkgname-$pkgver.tar.gz::https://github.com/lsegal/yard/archive/refs/tags/v$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+builddir="$srcdir/$_gemname-$pkgver"
+
+prepare() {
+	default_prepare
+
+	sed -i '/spec.signing_key/d' $_gemname.gemspec
+}
+
+build() {
+	gem build $_gemname.gemspec
+}
+
+check() {
+	rake
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+
+	gem install --local \
+		--install-dir "$gemdir" \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		$_gemname
+
+	rm -r "$gemdir"/cache \
+		"$gemdir"/build_info \
+		"$gemdir"/doc
+
+	mkdir -p "$pkgdir"/usr/share/doc/"$pkgname"/
+	install -Dm644 "$builddir"/docs/*.md "$pkgdir"/usr/share/doc/"$pkgname"/
+
+	cd "$gemdir/gems/$_gemname-$pkgver"
+	rm -r README.md CHANGELOG.md LEGAL docs LICENSE
+
+	install -Dm644 "$builddir"/LICENSE "$pkgdir"/usr/share/licenses/"$pkgname"/LICENSE
+}
+
+sha512sums="
+3f2db941a90769526f5e7f1f4e856a3d2a26f15090b4e77cc689d3fee79c6faf1aa5e33424b825e128130b604edf3b0c7441d09c7ae320c7b27f6726155372c0  ruby-yard-0.9.40.tar.gz
+"

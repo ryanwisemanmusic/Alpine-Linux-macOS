@@ -1,0 +1,40 @@
+maintainer="Hoang Nguyen <folliekazetani@protonmail.com>"
+pkgname=gallery-dl
+pkgver=1.31.10
+pkgrel=1
+pkgdesc="CLI tool to download image galleries"
+url="https://github.com/mikf/gallery-dl"
+arch="noarch"
+license="GPL-2.0-or-later"
+depends="py3-requests python3"
+makedepends="py3-gpep517 py3-setuptools py3-wheel"
+checkdepends="py3-pytest yt-dlp"
+subpackages="
+	$pkgname-doc
+	$pkgname-pyc
+	$pkgname-bash-completion
+	$pkgname-zsh-completion
+	$pkgname-fish-completion
+	"
+source="$pkgname-$pkgver-1.tar.gz::https://github.com/mikf/gallery-dl/archive/v$pkgver.tar.gz"
+
+build() {
+	make man completion
+
+	gpep517 build-wheel \
+		--wheel-dir .dist \
+		--output-fd 3 3>&1 >&2
+}
+
+check() {
+	make test
+}
+
+package() {
+	python3 -m installer -d "$pkgdir" \
+		.dist/*.whl
+}
+
+sha512sums="
+b227a0a398cae7e5b7b03a386641f062d83ab9e6281f54de5a5597d08ffe1b6368a4079ecff316ba60ad4a1dca288f8865c0779df69dd8965bdfcbc27ff1f05b  gallery-dl-1.31.10-1.tar.gz
+"

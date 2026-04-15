@@ -1,0 +1,213 @@
+#!/usr/bin/env atf-sh
+
+. $(atf_get_srcdir)/test_env.sh
+
+init_tests \
+	mkinitfs_help \
+	mkinitfs_invalid_opt \
+	mkinitfs_list_features \
+	mkinitfs_list_files \
+	mkinitfs_list_symlinks \
+	mkinitfs_list_modules \
+	mkinitfs_find_zst_compressed_firmware_blob \
+	mkinitfs_copy_firmware
+
+mock_depmod() {
+	echo '#!/bin/sh' > bin/depmod
+	chmod +x bin/depmod
+}
+
+mkinitfs_help_body() {
+	atf_check -o match:"usage:" mkinitfs -h
+}
+
+mkinitfs_invalid_opt_body() {
+	atf_check -s exit:1 -e match:"usage" \
+		mkinitfs -Z
+}
+
+mkinitfs_list_features_body() {
+	mkdir -p etc/mkinitfs/features.d
+	touch etc/mkinitfs/features.d/myfeature1.files
+	touch etc/mkinitfs/features.d/myfeature2.modules
+
+	features_dir="$PWD"/etc/mkinitfs/features.d atf_check \
+		-o match:"myfeature1" \
+		-o match:"myfeature2" \
+		mkinitfs -b "$PWD" -L
+}
+
+mkinitfs_list_files_body() {
+	mkdir -p etc/mkinitfs/features.d
+	touch testfile
+	echo "/testfile" > etc/mkinitfs/features.d/myfiles.files
+	DATADIR="$srcdir" atf_check \
+		-o match:"testfile" \
+		mkinitfs -b "$PWD" -P "$PWD/etc/mkinitfs/features.d" -n -F myfiles -l
+}
+
+mkinitfs_list_symlinks_body() {
+	mkdir -p etc/mkinitfs/features.d
+	touch testfile
+	mkdir testdir
+	touch testdir/dirfile
+	ln -s testfile filelink
+	ln -s testdir dirlink
+	cat >> etc/mkinitfs/features.d/myfiles.files << END
+/testfile
+/testdir
+/filelink
+/dirlink
+END
+	DATADIR="$srcdir" atf_check \
+		-o match:"testfile" \
+		-o match:"testdir" \
+		-o match:"testdir/dirfile" \
+		-o match:"filelink" \
+		-o match:"dirlink" \
+		-o not-match:"dirlink/dirfile" \
+		mkinitfs -b "$PWD" -P "$PWD/etc/mkinitfs/features.d" -n -F myfiles -l
+}
+
+mkinitfs_list_modules_body() {
+	kver=6.6.35-lts
+	mkdir -p etc/mkinitfs/features.d \
+		lib/modules/"$kver" \
+		lib/firmware/e100 \
+		bin
+
+	touch testfile
+	echo "/testfile" > etc/mkinitfs/features.d/myfeature.files
+	echo "kernel/fs/ext4/ext4.ko*" > etc/mkinitfs/features.d/myfeature.modules
+	echo "kernel/drivers/net/ethernet" >> etc/mkinitfs/features.d/myfeature.modules
+	cat > lib/modules/"$kver"/modules.dep <<-EOF
+		kernel/fs/mbcache.ko.gz:
+		kernel/fs/ext4/ext4.ko.gz: kernel/lib/crc16.ko.gz kernel/fs/mbcache.ko.gz kernel/fs/jbd2/jbd2.ko.gz
+		kernel/fs/ext2/ext2.ko.gz: kernel/fs/mbcache.ko.gz
+		kernel/fs/jbd2/jbd2.ko.gz:
+		kernel/fs/squashfs/squashfs.ko.gz:
+		kernel/fs/fat/fat.ko.gz:
+		kernel/fs/fat/vfat.ko.gz: kernel/fs/fat/fat.ko.gz
+		kernel/fs/fat/msdos.ko.gz: kernel/fs/fat/fat.ko.gz
+		kernel/lib/crc16.ko.gz:
+		kernel/drivers/misc/eeprom/ee1004.ko.gz:
+		kernel/drivers/net/ethernet/intel/e100.ko.gz: kernel/drivers/net/mii.ko.gz
+		kernel/drivers/net/mii.ko.gz:
+	EOF
+	# create fake modules
+	for i in $(cut -d: -f1 lib/modules/$kver/modules.dep); do
+		mkdir -p lib/modules/$kver/${i%/*}
+		touch lib/modules/$kver/$i
+	done
+
+	# fake modinfo
+	cat > bin/modinfo <<-EOF
+		#!/bin/sh
+		echo e100/d102e_ucode.bin
+		echo e100/d101s_ucode.bin
+		echo e100/d101m_ucode.bin
+	EOF
+	chmod +x bin/modinfo
+
+	mock_depmod
+
+	touch lib/firmware/e100/d102e_ucode.bin \
+		lib/firmware/e100/d101s_ucode.bin \
+		lib/firmware/e100/d101m_ucode.bin
+
+	DATADIR="$srcdir" atf_check \
+		-o match:"ext4.ko.gz$" \
+		-o match:"mbcache.ko.gz$" \
+		-o match:"jbd2.ko.gz$" \
+		-o match:"e100.ko.gz$" \
+		-o match:"e100/d102e_ucode.bin" \
+		-o not-match:"ext2" \
+		mkinitfs -b "$PWD" -P "$PWD/etc/mkinitfs/features.d" -F myfeature -l "$kver"
+}
+
+mkinitfs_find_zst_compressed_firmware_blob_body() {
+	kver=6.6.35-lts
+	mkdir -p etc/mkinitfs/features.d \
+		lib/modules/"$kver" \
+		lib/firmware/e100 \
+		bin
+
+	touch testfile lib/modules/"$kver"/mock.ko.gz
+	echo "/testfile" > etc/mkinitfs/features.d/myfeature.files
+	echo "kernel/drivers/net/ethernet" >> etc/mkinitfs/features.d/myfeature.modules
+	echo "mock.ko.gz" > etc/mkinitfs/features.d/myfeature.modules
+
+	# fake modinfo
+	cat > bin/modinfo <<-EOF
+		#!/bin/sh
+		echo e100/d102e_ucode.bin
+		echo e100/d101s_ucode.bin
+		echo e100/d101m_ucode.bin
+	EOF
+	chmod +x bin/modinfo
+
+	mock_depmod
+
+	touch lib/firmware/e100/d102e_ucode.bin.xz \
+		lib/firmware/e100/d101s_ucode.bin.zst \
+		lib/firmware/e100/d101m_ucode.bin.tar.gz
+
+	DATADIR="$srcdir" atf_check \
+		-o match:"e100/d102e_ucode.bin.xz" \
+		-o match:"e100/d101s_ucode.bin.zst" \
+		-o not-match:"e100/d101m_ucode.bin.tar.gz" \
+		mkinitfs -b "$PWD" -P "$PWD/etc/mkinitfs/features.d" -F myfeature -l "$kver"
+}
+
+mkinitfs_copy_firmware_body() {
+	kver=6.6.6-lts
+	mkdir -p etc/mkinitfs/features.d \
+		lib/modules/"$kver" \
+		lib/firmware/dir1 \
+		lib/firmware/dir2/sub/deep \
+		bin boot
+
+	touch testfile lib/modules/"$kver"/mock.ko.gz
+	echo "/testfile" > etc/mkinitfs/features.d/myfeature.files
+	echo "mock.ko.gz" > etc/mkinitfs/features.d/myfeature.modules
+
+	touch lib/firmware/root1
+
+	ln -s .. lib/firmware/dir1/link4
+	touch lib/firmware/root2
+
+	ln -s ../dir2/sub lib/firmware/dir1/link3
+	ln -s ../dir1/link3/deep lib/firmware/dir2/link2
+	ln -s dir2/link2/file1 lib/firmware/link1
+	touch lib/firmware/dir2/sub/deep/file1
+	ln -s nowhere lib/firmware/nolink
+
+	cat > bin/modinfo <<-EOF
+		#!/bin/sh
+		echo root1
+		echo dir1/link4/root2
+		echo dir2/link2/file1
+		echo link1
+		echo nolink
+		echo no
+	EOF
+	chmod +x bin/modinfo
+
+	mock_depmod
+
+	DATADIR="$srcdir" atf_check -s exit:0 mkinitfs -b "$PWD" -q -P \
+		"$PWD/etc/mkinitfs/features.d" -F myfeature -t "$PWD"/tmp -k "$kver"
+
+	cd tmp/lib/firmware
+
+	for i in dir1/link3 dir2/link2 dir1/link4 link1; do
+		[ -L "$i" ] || atf_fail "Failed to copy symlink $i correctly"
+	done
+
+	for i in root1 root2 dir2/sub/deep/file1; do
+		[ ! -L "$i" ] && [ -f "$i" ] || atf_fail "Failed to copy file $i correctly"
+	done
+
+	[ ! -L nolink ] && [ ! -e nolink ] || atf_fail "Invalid symlink not ignored correctly"
+	[ ! -L no ] && [ ! -e no ] || atf_fail "missing 'no' not ignored correctly"
+}

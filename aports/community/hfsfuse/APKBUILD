@@ -1,0 +1,36 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=hfsfuse
+pkgver=0.310
+pkgrel=0
+pkgdesc="FUSE driver for HFS+ filesystems"
+url="https://github.com/0x09/hfsfuse"
+arch="all"
+license="MIT BSD-2-Clause"
+makedepends="
+	fuse3-dev
+	linux-headers
+	utf8proc-dev
+	zlib-dev
+	"
+source="https://github.com/0x09/hfsfuse/releases/download/$pkgver/hfsfuse-$pkgver.tar.gz"
+options="!check"  # no tests provided
+
+prepare() {
+	default_prepare
+
+	rm -rf lib/utf8proc
+}
+
+build() {
+	make WITH_UBILIO=local WITH_UTF8PROC=system
+}
+
+package() {
+	mkdir -p "$pkgdir"/usr/bin
+	make install PREFIX="$pkgdir/usr" WITH_UBILIO=local WITH_UTF8PROC=system
+}
+
+sha512sums="
+08fadaebb405c5ae657ad7be7ded587abe9a7e6c2773c478db5a4e733064dd183ad6f6e19225da9c609b75fd2a20ecb288ab33090ee3cf95a0efdefa332e6011  hfsfuse-0.310.tar.gz
+"

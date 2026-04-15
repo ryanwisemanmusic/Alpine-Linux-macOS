@@ -1,0 +1,39 @@
+# Maintainer: Laurent Bercot <ska-devel@skarnet.org>
+pkgname=s6-rc
+pkgver=0.6.0.0
+pkgrel=0
+pkgdesc="Service manager for s6-based systems"
+url="https://skarnet.org/software/s6-rc/"
+arch="all"
+license="ISC"
+options="!check"  # No test suite.
+makedepends="skalibs-dev
+	execline-dev
+	s6-dev"
+subpackages="$pkgname-static $pkgname-libs $pkgname-dev $pkgname-doc"
+source="https://skarnet.org/software/s6-rc/s6-rc-$pkgver.tar.gz"
+
+build() {
+	./configure \
+		--prefix=/usr \
+		--libexecdir="/usr/libexec/$pkgname" \
+		--disable-allstatic \
+		--enable-shared \
+		--with-pkgconfig \
+		--enable-pkgconfig
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	install -D -m 0644 COPYING "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+	mkdir -p "$pkgdir/usr/share/doc" \
+		"$pkgdir/usr/share/s6-rc/policy/sources" \
+		"$pkgdir/etc/s6-rc/sources/global" \
+		"$pkgdir/etc/s6-rc/sources/local"
+	cp -a doc "$pkgdir/usr/share/doc/$pkgname"
+}
+
+sha512sums="
+51fe290bb9cb0ab6cf8659a2f94ebcd2998a03eca43c316535d9da03a9fdc4a083f65c60f9dd0a9ab3a9a28cf75b02adcbd72e2d1e92d4e1db056bbd1bf8a2c7  s6-rc-0.6.0.0.tar.gz
+"

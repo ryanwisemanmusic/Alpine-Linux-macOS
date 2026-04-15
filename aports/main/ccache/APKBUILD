@@ -1,0 +1,63 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=ccache
+pkgver=4.13.3
+pkgrel=0
+pkgdesc="fast C/C++ compiler cache"
+url="https://ccache.dev/"
+arch="all"
+license="GPL-3.0-or-later"
+makedepends="
+	asciidoctor
+	cmake
+	doctest-dev
+	hiredis-dev
+	linux-headers
+	perl
+	samurai
+	xxhash-dev
+	zstd-dev
+	"
+checkdepends="bash util-linux-misc python3"
+subpackages="$pkgname-doc"
+source="https://github.com/ccache/ccache/releases/download/v$pkgver/ccache-$pkgver.tar.xz
+	"
+
+prepare() {
+	default_prepare
+
+	# The riscv64 builder seems to have setgid bit set,
+	# which causes tests 2, 22, and 34 to fail.
+	chmod -v -s .
+}
+
+build() {
+	cmake -B build -G Ninja \
+		-DCCACHE_DEV_MODE=OFF \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	cmake --build build
+}
+
+check() {
+	case "$CARCH" in
+		s390x) ctest --test-dir build -E "(unittest)";;
+		*) ctest --test-dir build;;
+	esac
+}
+
+package() {
+	DESTDIR="$pkgdir" cmake --install build
+
+	local link=
+	mkdir -p "$pkgdir"/usr/lib/ccache/bin
+
+	for link in cc gcc g++ cpp c++ $CHOST-cc $CHOST-gcc \
+		$CHOST-g++ $CHOST-c++ c89 c99; do
+		ln -sf ../../../bin/ccache "$pkgdir"/usr/lib/ccache/bin/$link
+	done
+}
+
+sha512sums="
+93766932df147395eb2ec1d58e660be4d713fb0e210d9b1d7ab8798d708abc3a99ced2580b31c0a819035a6c7b033edf61bbc2343d2f02e8f18de44faa8f7f9a  ccache-4.13.3.tar.xz
+"

@@ -1,0 +1,37 @@
+# Contributor: Thiago Perrotta <tbperrotta@gmail.com>
+maintainer="Matthias Ahouansou <matthias@ahouansou.cz>"
+pkgname=typos
+pkgver=1.45.0
+pkgrel=0
+pkgdesc="Source code spell checker"
+url="https://github.com/crate-ci/typos"
+arch="all"
+license="MIT OR Apache-2.0"
+makedepends="cargo cargo-auditable"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+
+	cargo fetch --target="$CTARGET" --locked
+}
+
+build() {
+	cargo auditable build --frozen --release
+}
+
+check() {
+	# https://github.com/zkat/supports-unicode/blob/f886c823e6f4b5760171fbafcbe42ede41e26d6c/src/lib.rs#L47
+	LANG="C.UTF-8" cargo test --frozen
+}
+
+package() {
+	install -Dm755 "target/release/$pkgname" -t "$pkgdir/usr/bin"
+	install -Dm644 "LICENSE-MIT" "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+	install -Dm644 "LICENSE-APACHE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+}
+
+sha512sums="
+6cec33ff2a030658d2300ef28ba883acb45e52b6fc87561a496b0fcfd9d185d0335e2597af4093948a1dc0e914ae1b38856782ac9877fdf9ca82f045765e859d  typos-1.45.0.tar.gz
+"

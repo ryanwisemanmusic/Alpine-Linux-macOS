@@ -1,0 +1,40 @@
+# Contributor: Hoang Nguyen <folliekazetani@protonmail.com>
+# Maintainer: omni <omni+alpine@hack.org>
+maintainer="omni <omni+alpine@hack.org>"
+pkgname=passt
+pkgver=2026.01.20
+_commit=386b5f5
+_tag=${pkgver//./_}.$_commit
+pkgrel=0
+pkgdesc="Plug A Simple Socket Transport"
+url="https://passt.top/"
+# ppc6le: may fail in CI with the message:
+#   Failed to close files leaked by parent: Function not implemented
+# but should pass on the ppc64le package builder, see 2024-09-12 12:
+#   https://irclogs.alpinelinux.org/%23alpine-devel-2024-09.log
+arch="all"
+license="BSD-3-Clause AND GPL-2.0-or-later"
+makedepends="coreutils-fmt linux-headers"
+subpackages="$pkgname-doc"
+source="https://passt.top/passt/snapshot/passt-$_tag.tar.gz"
+builddir="$srcdir/$pkgname-$_tag"
+
+build() {
+	make VERSION="$_tag"
+}
+
+check() {
+	# complicated test setup, requires qemu and a lot of VM images
+	# let's just at least do this
+	./passt --version
+	./pasta --version
+}
+
+package() {
+	make DESTDIR="$pkgdir" prefix=/usr install
+	install -Dm644 LICENSES/*.txt -t "$pkgdir"/usr/share/licenses/$pkgname/
+}
+
+sha512sums="
+d0976715e61a74a739fce75d7ec014d6ef0b7085ab59376e00a160264b5255aec84d6dbdcec9e1cba53d13fb687813a0c3789a1dc787a45bcc4b1e3e92b39ede  passt-2026_01_20.386b5f5.tar.gz
+"

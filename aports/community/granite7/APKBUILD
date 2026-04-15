@@ -1,0 +1,50 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+maintainer="Achill Gilgenast <achill@achill.org>"
+pkgname=granite7
+pkgver=7.8.0
+pkgrel=1
+pkgdesc="Library that extends GTK with common widgets and utilities"
+url="https://github.com/elementary/granite"
+arch="all"
+license="LGPL-3.0-or-later"
+depends="
+	gsettings-desktop-schemas
+	hicolor-icon-theme
+	"
+makedepends="
+	glib-dev
+	gobject-introspection-dev
+	gtk4.0-dev
+	libgee-dev
+	libshumate-dev
+	meson
+	sassc
+	vala
+	"
+subpackages="
+	$pkgname-dev
+	$pkgname-lang
+	"
+source="https://github.com/elementary/granite/archive/$pkgver/granite-$pkgver.tar.gz"
+options="!check"  # no tests provided
+builddir="$srcdir/granite-$pkgver/"
+
+build() {
+	abuild-meson . output
+	meson compile -C output
+}
+
+package() {
+	DESTDIR="$pkgdir" meson install --no-rebuild -C output
+}
+
+dev() {
+	default_dev
+
+	amove usr/bin/granite-7-demo
+	amove usr/share/applications/io.elementary.granite-7.demo.desktop
+}
+
+sha512sums="
+dfb7e7e67a31978a00b1d9422b96eb6cb30a8c18511c36e9b012911f857a3ff812f92df97a0015f81f4bbf25674ef7dc6258c813a90bf2d74bc6666efe4e787c  granite-7.8.0.tar.gz
+"

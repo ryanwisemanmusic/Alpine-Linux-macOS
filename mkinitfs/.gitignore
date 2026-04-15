@@ -1,0 +1,12 @@
+*.o
+bootchartd
+initramfs-init
+mkinitfs
+nlplug-findfs/nlplug-findfs
+*.[17]
+mkinitfs.conf
+Kyuafile
+tests/Kyuafile
+
+# vim temporary files
+*.swp
