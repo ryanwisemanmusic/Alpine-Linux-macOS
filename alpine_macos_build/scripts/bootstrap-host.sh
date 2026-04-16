@@ -82,6 +82,9 @@ for formula in \
 	squashfs \
 	mtools \
 	fakeroot \
+	coreutils \
+	gnu-getopt \
+	gnu-tar \
 	meson \
 	ninja \
 	pkgconf \
@@ -117,6 +120,40 @@ for tool in \
 	aarch64-elf-strip; do
 	if command -v "$tool" >/dev/null 2>&1; then
 		stage_link "$tool" "$(command -v "$tool")"
+	fi
+done
+
+for candidate in \
+	"$("$brew_bin" --prefix coreutils 2>/dev/null)/libexec/gnubin/install" \
+	"/opt/homebrew/opt/coreutils/libexec/gnubin/install" \
+	"/opt/homebrew/bin/ginstall" \
+	"/usr/local/opt/coreutils/libexec/gnubin/install" \
+	"/usr/local/bin/ginstall"; do
+	if [ -x "$candidate" ]; then
+		stage_link install "$candidate"
+		break
+	fi
+done
+
+for candidate in \
+	"$("$brew_bin" --prefix gnu-getopt 2>/dev/null)/bin/getopt" \
+	"/opt/homebrew/opt/gnu-getopt/bin/getopt" \
+	"/usr/local/opt/gnu-getopt/bin/getopt"; do
+	if [ -x "$candidate" ]; then
+		stage_link getopt "$candidate"
+		break
+	fi
+done
+
+for candidate in \
+	"$("$brew_bin" --prefix gnu-tar 2>/dev/null)/libexec/gnubin/tar" \
+	"/opt/homebrew/opt/gnu-tar/libexec/gnubin/tar" \
+	"/opt/homebrew/bin/gtar" \
+	"/usr/local/opt/gnu-tar/libexec/gnubin/tar" \
+	"/usr/local/bin/gtar"; do
+	if [ -x "$candidate" ]; then
+		stage_link tar "$candidate"
+		break
 	fi
 done
 
